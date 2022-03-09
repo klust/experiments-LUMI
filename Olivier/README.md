@@ -8,21 +8,33 @@
     tar -xf $HOME/SAVE/LUMI_test_Olivier.tar.gz
     ```
 
--   Link to the `prep_u-*` and `prep_b-*` scripts that will be used, e.g.,
+-   Link to the `prep_u-*` and `prep_b-*` scripts that will be used
+    as well as the scripts to start a bunch of jobs, e.g.,
 
     ```bash
     /bin/rm -f prep_u.py prep_b.py
     ln -s $HOME/experiments-LUMI/Olivier/prep_u-test_202203.py prep_u.py
     ln -s $HOME/experiments-LUMI/Olivier/prep_b-test_202203.py prep_b.py
+    ln -s $HOME/experiments-LUMI/Olivier/start_u.sh
+    ln -s $HOME/experiments-LUMI/Olivier/start_b.sh
     ```
 
 -   It is of course best to start with a simple test run.
 
     ```bash
-    ./prep_b.py 1 1
     ./prep_u.py 1 1
-    sbatch bound1.slurm
+    ./prep_b.py 1 1
     sbatch unbound1.slurm
+    sbatch bound1.slurm
+    ```
+
+-   For running tests for a range of initial conditions:
+
+    ```bash
+    ./prep_u.py 2 100
+    ./start_u.sh 2 100
+    ./prep_b.py 2 100
+    ./start_b.sh 2 100
     ```
 
 

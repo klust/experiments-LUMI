@@ -8,8 +8,9 @@ upper_bound = int(sys.argv[2])
 for index in range(lower_bound,upper_bound+1):
 	s_i = str(index)
 	with open('unbound'+ s_i +'.slurm','w') as myfile:
-		myfile.write('''#!/usr/bin/env bash
+		myfile.write( '''#!/usr/bin/env bash
 
+#SBATCH --job-name=unbound_sim''' + s_i  + '''
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
@@ -17,6 +18,7 @@ for index in range(lower_bound,upper_bound+1):
 #SBATCH --hint=nomultithread
 #SBATCH --no-requeue
 #SBATCH --open-mode=append
+#SBATCH --output=%x-%j.out
 #SBATCH --account=project_462000008
 #SBATCH --partition=standard
 
@@ -57,4 +59,7 @@ srun -N 1 -n 1 -c 1 gmx_mpi_d grompp -f unbound.mdp -c unbound.gro -t unbound.cp
 
 echo -e '\n\n####################\n##\n## Model run\n##\n'
 
-srun gmx_mpi_d mdrun -s $RUNDIR/unbound_sim.tpr -x $RUNDIR/RUN.xtc -cpo $RUNDIR/RUN.cpt -c $RUNDIR/RUN.gro -g $RUNDIR/RUN.log -e $RUNDIR/ener.edr -pin on -dlb auto -maxh 1''')
+srun gmx_mpi_d mdrun -s $RUNDIR/unbound_sim.tpr -x $RUNDIR/RUN.xtc -cpo $RUNDIR/RUN.cpt -c $RUNDIR/RUN.gro -g $RUNDIR/RUN.log -e $RUNDIR/ener.edr -pin on -dlb auto -maxh 1
+
+''' )
+
