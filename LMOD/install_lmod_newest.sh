@@ -8,12 +8,17 @@
 # - LMOD: https://github.com/TACC/Lmod/releases
 #
 lua_version=5.4.4
-luarocks_version=3.8.0
-tcl_version=8.6.12
-lmod_version=8.7.2
+luarocks_version=3.9.2
+tcl_version=8.6.13
+lmod_version=8.7.19
+
+# Set the installation root
+# Note that the require function works with patterns and a hyphen in a directory name
+# therefore does not work.
+installroot=$HOME/appl_lmod
 
 # Just to be sure, add the binary directory to the PATH.
-PATH=$HOME/appl/bin:$PATH
+PATH=$installroot:$PATH
 
 cd $HOME
 mkdir -p work
@@ -31,9 +36,9 @@ tar -xf lua-$lua_version.tar.gz
 cd $HOME/work/lua-$lua_version
 # Patch src/luaconf.h to use the correct value for LUA_ROOT
 # as otherwise packages will not be found
-sed -i -e "s/\/usr\/local\//${HOME//\//\\\/}\/appl\//" src/luaconf.h
+sed -i -e "s/\/usr\/local\//${HOME//\//\\\/}\/appl_lmod\//" src/luaconf.h
 # Build
-make linux install INSTALL_TOP=$HOME/appl
+make linux install INSTALL_TOP=$installroot
 #
 # - LuaRocks
 #
@@ -41,14 +46,14 @@ cd $HOME/work
 [[ -f luarocks-$luarocks_version.tar.gz ]] || wget https://luarocks.org/releases/luarocks-$luarocks_version.tar.gz
 tar -xf luarocks-$luarocks_version.tar.gz
 cd $HOME/work/luarocks-$luarocks_version
-./configure --with-lua=$HOME/appl --prefix=$HOME/appl
+./configure --with-lua=$installroot --prefix=$installroot
 make ; make install
 #
 # - posix and filesystem packages
 #
 cd $HOME/work
-luarocks --lua-dir $HOME/appl install luaposix
-luarocks --lua-dir $HOME/appl install luafilesystem
+$installroot/bin/luarocks --lua-dir $installroot install luaposix
+$installroot/bin/luarocks --lua-dir $installroot install luafilesystem
 
 #
 # Install Tcl
@@ -58,9 +63,9 @@ cd $HOME/work
 [[ -f tcl$tcl_version-src.tar.gz ]] || wget https://prdownloads.sourceforge.net/tcl/tcl$tcl_version-src.tar.gz
 tar -xf tcl$tcl_version-src.tar.gz
 cd $HOME/work/tcl$tcl_version/unix
-./configure --prefix=$HOME/appl
+./configure --prefix=$installroot
 make ; make install
-cd $HOME/appl/bin
+cd $installroot/bin
 ln -s tclsh8.6 tclsh
 
 #
@@ -70,13 +75,17 @@ cd $HOME/work
 [[ -f lmod-$lmod_version.tar.gz ]] || eval "wget https://github.com/TACC/Lmod/archive/refs/tags/$lmod_version.tar.gz ; mv $lmod_version.tar.gz lmod-$lmod_version.tar.gz"
 tar -xf lmod-$lmod_version.tar.gz
 cd $HOME/work/Lmod-$lmod_version
-TCL_INCLUDE=-I$HOME/appl/include \
-PATH_TO_TCLSH=$HOME/appl/bin/tclsh8.6 \
-./configure --prefix=$HOME/appl/share \
-            --with-lua_include=/$HOME/appl/include \
-            --with-lua=$HOME/appl/bin/lua \
-            --with-luac=$HOME/appl/bin/luac
+TCL_INCLUDE=-I$installroot/include \
+PATH_TO_TCLSH=$installroot/bin/tclsh8.6 \
+./configure --prefix=$installroot/share \
+            --with-lua_include=$installroot/include \
+            --with-lua=$installroot/bin/lua \
+            --with-luac=$installroot/bin/luac
 make install
+cd $installroot/share/lmod/lmod/libexec
+sed -i -e "s| tclsh| $installroot/bin/tclsh8.6|" Configuration.lua
+sed -i -e "s|#\!/usr/bin/env tclsh|#\!$installroot/bin/tclsh8.6|" RC2lua.tcl
+sed -i -e "s|#\!/usr/bin/env tclsh|#\!$installroot/bin/tclsh8.6|" tcl2lua.tcl
 
 #
 # Clean up
@@ -89,4 +98,4 @@ rm -rf Lmod-$lmod_version
 
 # Initialise:
 # module purge
-# source $HOME/appl/share/lmod/lmod/init/bash
+# source $HOME/appl_lmod/share/lmod/lmod/init/bash
