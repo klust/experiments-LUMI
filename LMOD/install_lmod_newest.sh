@@ -16,6 +16,7 @@ lmod_version=8.7.19
 # Note that the require function works with patterns and a hyphen in a directory name
 # therefore does not work.
 installroot=$HOME/appl_lmod
+mkdir -p $installroot
 
 # Just to be sure, add the binary directory to the PATH.
 PATH=$installroot:$PATH
@@ -75,6 +76,10 @@ cd $HOME/work
 [[ -f lmod-$lmod_version.tar.gz ]] || eval "wget https://github.com/TACC/Lmod/archive/refs/tags/$lmod_version.tar.gz ; mv $lmod_version.tar.gz lmod-$lmod_version.tar.gz"
 tar -xf lmod-$lmod_version.tar.gz
 cd $HOME/work/Lmod-$lmod_version
+# Make a correction to Makefile.in
+sed -i -e 's|$(TCL_LIBS)|"$(TCL_LIBS)"|' Makefile.in
+# Configure
+TCL_LIBS="-Wl,-rpath $installroot/lib" \
 TCL_INCLUDE=-I$installroot/include \
 PATH_TO_TCLSH=$installroot/bin/tclsh8.6 \
 ./configure --prefix=$installroot/share \
@@ -83,7 +88,9 @@ PATH_TO_TCLSH=$installroot/bin/tclsh8.6 \
             --with-luac=$installroot/bin/luac
 make install
 cd $installroot/share/lmod/lmod/libexec
-sed -i -e "s| tclsh| $installroot/bin/tclsh8.6|" Configuration.lua
+sed -i -e 's| tclsh"| " .. cosmic:value("LMOD_TCLSH")|' Configuration.lua
+# The next sed commands are not really necessary since Lmod calls these script 
+# with the LMOD_TCLSH command if it uses them.
 sed -i -e "s|#\!/usr/bin/env tclsh|#\!$installroot/bin/tclsh8.6|" RC2lua.tcl
 sed -i -e "s|#\!/usr/bin/env tclsh|#\!$installroot/bin/tclsh8.6|" tcl2lua.tcl
 
