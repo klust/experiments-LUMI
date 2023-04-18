@@ -2,6 +2,8 @@
 
 local debug = true
 
+local lfs = require('lfs')
+
 -- -----------------------------------------------------------------------------
 --
 -- Include code to decode a JSON file
@@ -316,13 +318,13 @@ end
 
 function colour_thresholds( value )
 
-    local threshold_red = 90
+    local threshold_red =    90
     local threshold_orange = 80
-
+    
     if value >= threshold_red then 
-        return '\\u001b[31m', '\\u001b[0m'
+        return string.char(27) .. '[31m', string.char(27) .. '[0m'
     elseif value >= threshold_orange then 
-        return '\\u001b[31m', '\\u001b[0m'
+        return string.char(27) .. '[33m', string.char(27) .. '[0m'
     else
         return '', ''
     end
@@ -443,36 +445,145 @@ else -- User with regular privileges
 
 end
 
-io.stdout:write( 'Hello, world!\n' )
-
-local project_path = '/Users/klust/Projects/LUMI-WS/experiments-LUMI/LUA/SYSINFO/project_info'
+local project_path = '/var/lib/project_info'
 
 for _,project in ipairs( project_list )
 do
 
-    print( 'Gathering information for project ' .. project )
+    -- print( 'Gathering information for project ' .. project )
+    
+    local project_postfix = project .. '/' .. project .. '.json'
 
-    local project_file = project_path .. '/' .. project .. '/' .. project .. '.json'
+    local project_file = project_path .. '/users/' .. project_postfix
+    -- print( 'Attempting to read information from ' ..project_file )
     local fh = io.open( project_file, 'r' )
+    if fh == nil then
+        project_file = project_path .. '/lust/' .. project_postfix
+        -- print( 'Now attempting to read information from ' project_file )
+        fh = io.open( project_file, 'r' )
+    end
     if fh == nil then 
-        io.stderr:write( 'ERROR: Could not read the information of project ' .. project .. '\n' )
-        exit( 1 )
+        io.stderr:write( 'ERROR: You may not have sufficient rights to get information from project ' .. project .. 
+                         ' or the project name is invalid.\n\n' )
+        os.exit( 1 )
     end
     local project_info_str = fh:read( '*all' )
     fh:close()
+    
+    local project_timestamp = lfs.attributes( project_file, 'modification' )
 
     local project_info = json_decode( project_info_str )
+
+    --
+    -- Print the header
+    --
 
     print( '--------------------------------------------------------------------------------\n' )
     print( 'Information for ' .. project .. ' (' .. project_info['title'] .. '):\n' )
 
-    local project_fs = 'lustrep1'
-    print( '- Project and scratch dir on filesystem ' .. project_fs )
+    --
+    -- Determine the location of the project in the file system
+    --
+    
+    local project_scratch_dir = lfs.symlinkattributes( '/scratch/' .. project, 'target' )
+    local project_fs
+    if project_scratch_dir == nil then
+        project_fs = UNKNOWN
+    else
+        _, _, project_fs = string.find( project_scratch_dir, '/pfs/(lustrep%d)/.*' )
+    end
+    print( '- Project and scratch dir on filesystem ' .. ( project_fs or 'UNKNOWN' ) )
 
+    --
+    -- Check disk quotas
+    --
 
-    print( '- Current disk quota:' )
+    local use_cached = true
+    local quota = {}
+    
+    local quota_cached = project_info['storage_quotas']['directories']
+    
+    -- Project directory
+    quota['project'] = {}
+    quota['project']['has_dir'] = quota_cached ~= nil and quota_cached ['projappl'] ~=  nil
+    if quota['project']['has_dir'] then
+	    quota['project']['block_used'] = quota_cached['projappl']['block_quota_used']
+	    quota['project']['block_soft'] = quota_cached['projappl']['block_quota_soft']
+	    quota['project']['block_hard'] = quota_cached['projappl']['block_quota_hard']
+	    quota['project']['inode_used'] = quota_cached['projappl']['inode_quota_used']
+	    quota['project']['inode_soft'] = quota_cached['projappl']['inode_quota_soft']
+	    quota['project']['inode_hard'] = quota_cached['projappl']['inode_quota_hard']
+    end
+    
+    -- Scratch directory
+    quota['scratch'] = {}
+    quota['scratch']['has_dir'] = quota_cached ~= nil and quota_cached ['scratch'] ~=  nil
+    if quota['scratch']['has_dir'] then
+	    quota['scratch']['block_used'] = quota_cached['scratch']['block_quota_used']
+	    quota['scratch']['block_soft'] = quota_cached['scratch']['block_quota_soft']
+	    quota['scratch']['block_hard'] = quota_cached['scratch']['block_quota_hard']
+	    quota['scratch']['inode_used'] = quota_cached['scratch']['inode_quota_used']
+	    quota['scratch']['inode_soft'] = quota_cached['scratch']['inode_quota_soft']
+	    quota['scratch']['inode_hard'] = quota_cached['scratch']['inode_quota_hard']
+	end
+    
+    -- Flash directory
+    quota['flash'] = {}
+    quota['flash']['has_dir'] = true
+    quota['flash']['has_dir'] = quota_cached ~= nil and quota_cached ['flash'] ~=  nil
+    if quota['flash']['has_dir'] then
+	    quota['flash']['block_used'] = quota_cached['flash']['block_quota_used']
+	    quota['flash']['block_soft'] = quota_cached['flash']['block_quota_soft']
+	    quota['flash']['block_hard'] = quota_cached['flash']['block_quota_hard']
+	    quota['flash']['inode_used'] = quota_cached['flash']['inode_quota_used']
+	    quota['flash']['inode_soft'] = quota_cached['flash']['inode_quota_soft']
+	    quota['flash']['inode_hard'] = quota_cached['flash']['inode_quota_hard']
+    end
+    
 
+    print( '- Current disk quota (' .. (use_cached and 'cached info' or 'live info') .. '):' )
+    
+    local spacer = string.gsub( project, '.', ' ' )
 
+    if quota['project']['has_dir'] then
+	    block_perc_used = 100 * quota['project']['block_used'] / quota['project']['block_soft']
+	    inode_perc_used = 100 * quota['project']['inode_used'] / quota['project']['inode_soft']
+	    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
+	    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
+	    
+	    print( '  - /project/' .. project .. ': ' ..
+	           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. '% used (' .. quota['project']['block_used'] .. ' of ' .. quota['project']['block_soft'] .. '/' .. quota['project']['block_hard'] .. ' soft/hard)' .. block_colour_off ..
+	           ',\n               ' .. spacer ..  
+	           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. '% used (' .. quota['project']['inode_used'] .. ' of ' .. quota['project']['inode_soft'] .. '/' .. quota['project']['inode_hard'] .. ' soft/hard)' .. block_colour_off )
+    end
+
+    if quota['scratch']['has_dir'] then
+	    block_perc_used = 100 * quota['scratch']['block_used'] / quota['scratch']['block_soft']
+	    inode_perc_used = 100 * quota['scratch']['inode_used'] / quota['scratch']['inode_soft']
+	    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
+	    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
+	    
+	    print( '  - /scratch/' .. project .. ': ' ..
+	           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. '% used (' .. quota['scratch']['block_used'] .. ' of ' .. quota['scratch']['block_soft'] .. '/' .. quota['scratch']['block_hard'] .. ' soft/hard)' .. block_colour_off ..
+	           ',\n               ' .. spacer ..  
+	           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. '% used (' .. quota['scratch']['inode_used'] .. ' of ' .. quota['scratch']['inode_soft'] .. '/' .. quota['scratch']['inode_hard'] .. ' soft/hard)' .. block_colour_off )
+    end
+
+    if quota['flash']['has_dir'] then
+	    block_perc_used = 100 * quota['flash']['block_used'] / quota['flash']['block_soft']
+	    inode_perc_used = 100 * quota['flash']['inode_used'] / quota['flash']['inode_soft']
+	    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
+	    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
+	    
+	    print( '  - /flash/' .. project .. ':   ' ..
+	           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. '% used (' .. quota['flash']['block_used'] .. ' of ' .. quota['flash']['block_soft'] .. '/' .. quota['flash']['block_hard'] .. ' soft/hard)' .. block_colour_off ..
+	           ',\n               ' .. spacer ..  
+	           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. '% used (' .. quota['flash']['inode_used'] .. ' of ' .. quota['flash']['inode_soft'] .. '/' .. quota['flash']['inode_hard'] .. ' soft/hard)' .. block_colour_off )
+    end
+
+    --
+    -- Check the allocation
+    --
 
     print( '- State of the allocation (cached info):' )
 
@@ -481,8 +592,8 @@ do
         local used = project_info['billing']['cpu_hours']['used']
         local perc_used = 100 * used / alloc
         local colour_on, colour_off = colour_thresholds( perc_used )
-        print( '  - CPU Khours: ' .. colour_on .. used .. ' used of ' .. alloc .. ' (' .. string.format( '%.1f', perc_used ) .. '%)' .. colour_off )
-    else
+        print( '  - CPU Khours:      ' .. colour_on .. string.format( '%5.1f', perc_used ) .. '% used (' .. used .. ' of ' .. alloc .. ')' .. colour_off )
+   else
         print( '  - No CPU hours allocated' )
     end
 
@@ -491,7 +602,7 @@ do
         local used = project_info['billing']['gpu_hours']['used']
         local perc_used = 100 * used / alloc
         local colour_on, colour_off = colour_thresholds( perc_used )
-        print( '  - GPU hours: ' .. colour_on .. used .. ' used of ' .. alloc .. ' (' .. string.format( '%.1f', perc_used ) .. '%)' .. colour_off )
+        print( '  - GPU hours:       ' .. colour_on .. string.format( '%5.1f', perc_used ) .. '% used (' .. used .. ' of ' .. alloc .. ')' .. colour_off )
     else
         print( '  - No GPU hours allocated' )
     end
@@ -501,7 +612,7 @@ do
         local used = project_info['billing']['storage_hours']['used']
         local perc_used = 100 * used / alloc
         local colour_on, colour_off = colour_thresholds( perc_used )
-        print( '  - Storage TBhours: ' .. colour_on .. used .. ' used of ' .. alloc .. ' (' .. string.format( '%.1f', perc_used ) .. '%)' .. colour_off )
+        print( '  - Storage TBhours: ' .. colour_on .. string.format( '%5.1f', perc_used ) .. '% used (' .. used .. ' of ' .. alloc .. ')' .. colour_off )
     else
         print( '  - No storage TBhours allocated' )
     end
@@ -511,10 +622,10 @@ do
         local used = project_info['billing']['qpu_secs']['used']
         local perc_used = 100 * used / alloc
         local colour_on, colour_off = colour_thresholds( perc_used )
-        print( '  - QPU seconds: ' .. colour_on .. used .. ' used of ' .. alloc .. ' (' .. string.format( '%.1f', perc_used ) .. '%)' .. colour_off )
+        print( '  - QPU seconds:     ' .. colour_on .. string.format( '%5.1f', perc_used ) .. '% used (' .. used .. ' of ' .. alloc .. ')' .. colour_off )
     end
 
-    print( '- Cached info was gathered at TODO' )
+    print( '- Cached info was gathered at ' .. os.date( '%c', project_timestamp ) .. '\n' )
 
 
 end
