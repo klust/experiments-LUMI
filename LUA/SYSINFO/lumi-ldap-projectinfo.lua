@@ -294,11 +294,38 @@ function print_help()
         '  -h/--help:              Show this help and quit\n' ..
         '  -p/--project <project>: Show information for the given project or given list of projects\n' ..
         '                          (comma-separated and without spaces)\n' ..
-        'Projects can also be specified without using -p.'
+        '  -u/--user <userid> :    Add all projects of user <userid> to the list\n' ..
+        'Projects can also be specified without using -p.\n' ..
+        'Without any arguments the information of the projects of the current user will be printed.'
     )
 
 end
 
+
+-- -----------------------------------------------------------------------------
+--
+-- Function to get the list of projects of a userid.
+--
+-- -----------------------------------------------------------------------------
+
+function get_projects_from_user( userid )
+
+    local cmd = "/usr/bin/getent group | /usr/bin/grep project_ | " ..
+                "/usr/bin/sed -e 's/,/|/g' -e 's/:/|/g' -e 's/\\(.*\\)/\\1|/' | " ..
+                "/usr/bin/grep '|" .. userid .. "|' | " ..
+                "/usr/bin/cut -d'|' -f1"
+
+    local project_list = {}
+    
+    fh = io.popen( cmd, 'r')
+    for line in fh:lines() do table.insert( project_list, line ) end
+    fh:close()
+    table.sort( project_list )
+    
+    return project_list
+
+
+end  -- function get_projects_from_user
 
 
 -- -----------------------------------------------------------------------------
@@ -344,9 +371,15 @@ do
             table.insert( project_list, project )
         end
         if debug then io.stderr:write( 'DEBUG: Found -p/--project argument with value ' .. arg[argctr] .. '\n' ) end
+    elseif ( arg[argctr] == '-u' or arg[argctr] == '--user' ) then
+        argctr = argctr + 1
+        local user_projects = get_projects_from_user( arg[argctr] )
+        for _, project in ipairs( user_projects ) do
+            table.insert( project_list, project )
+        end
     elseif arg[argctr]:sub(1, 1)  ~=  '-' then
         -- An argument that does not start with a dash: treat as a project list
-         for _, project in ipairs( arg[argctr]:split( ',' ) ) do
+        for _, project in ipairs( arg[argctr]:split( ',' ) ) do
             table.insert( project_list, project )
         end
         if debug then io.stderr:write( 'DEBUG: Found project argument with value ' .. arg[argctr] .. '\n' ) end        
@@ -355,6 +388,19 @@ do
         os.exit( 1 )
     end
     argctr = argctr + 1
+end
+
+if #arg == 0 then
+
+    -- No arguments so we use the projects of the current user.without
+    
+    local user_executing = os.getenv( 'USER' )
+    
+    user_projects = get_projects_from_user( user_executing )
+    for _, project in ipairs( user_projects ) do
+        table.insert( project_list, project )
+    end
+
 end
 
 local project_path = '/var/lib/project_info'
