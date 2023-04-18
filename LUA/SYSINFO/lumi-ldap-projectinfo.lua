@@ -330,6 +330,33 @@ end  -- function get_projects_from_user
 
 -- -----------------------------------------------------------------------------
 --
+-- Function to create a table with names for each userid
+--
+-- -----------------------------------------------------------------------------
+
+function get_user_table()
+
+	cmd = '/usr/bin/getent passwd'
+	
+	local user_table = {}
+	
+	fh = io.popen( cmd, 'r' )
+	for line in fh:lines() do
+	    local userid, name
+	    _, _, userid, name = line:find( '([^:]*):[^:]*:[^*]*:[^:]*:([^:]*):[^:]*:[^:]*' )
+	    user_table[userid] = name
+	end
+	fh:close()
+
+    
+    return user_table
+
+
+end  -- function get_user_table
+
+
+-- -----------------------------------------------------------------------------
+--
 -- Function to generate the escape codes for printing values that are compared
 -- to thresholds. Two values are returned: The escape codes to turn the colour
 -- on and off.
@@ -648,18 +675,15 @@ do
         for member,_ in pairs( project_info['members'] ) do table.insert( member_list, member ) end
         table.sort( member_list )
         
+        local user_table = get_user_table()
+        
         for _,member in ipairs( member_list ) do
             if project_info['members'][member]['active'] then
                 -- Active member, get GECOS information
-                local cmd = '/usr/bin/getent passwd | /usr/bin/egrep ^' .. member .. ':'
-                fh = io.popen( cmd, 'r' )
-                local passwd_line = fh:read()
-                fh:close()
-                local gecos_name = passwd_line:split( ':' )[5]
-                if gecos_name == nil then
+                if user_table[member] == nil then
                     print( '  - ' .. member .. ' (active)' )
                 else
-                    print( '  - ' .. member .. ' - ' .. gecos_name )
+                    print( '  - ' .. member .. ' - ' .. user_table[member] )
                 end 
             else
                 print( '  - ' .. member .. ' (inactive)' )
