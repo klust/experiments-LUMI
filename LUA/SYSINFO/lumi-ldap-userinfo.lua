@@ -289,14 +289,13 @@ function string:split(sep)
 function print_help()
 
     print( 
-        '\nlumi-ldap-projectinfo: Print information about current quota and allocations\n\n' ..
+        '\nlumi-ldap-userinfo: Print information about current quota and allocations\n\n' ..
         'Arguments:\n' ..
         '  -h/--help:              Show this help and quit\n' ..
-        '  -p/--project <project>: Show information for the given project or given list of projects\n' ..
-        '                          (comma-separated and without spaces)\n' ..
-        '  -u/--user <userid> :    Add all projects of user <userid> to the list\n' ..
-        'Projects can also be specified without using -p.\n' ..
-        'Without any arguments the information of the projects of the current user will be printed.'
+        '  -u/--user <userid> :    Show information for the given user or users\n' ..
+        '                          (comma-separated list)\n' ..
+        'Users can also be specified without using -u.\n' ..
+        'Without any arguments the information of the current user will be printed.'
     )
 
 end
@@ -330,29 +329,37 @@ end  -- function get_projects_from_user
 
 -- -----------------------------------------------------------------------------
 --
--- Function to create a table with names for each userid
+-- Function to get the title of a project.
 --
 -- -----------------------------------------------------------------------------
 
-function get_user_table()
+function get_project_title( project )
 
-	cmd = '/usr/bin/getent passwd'
-	
-	local user_table = {}
-	
-	fh = io.popen( cmd, 'r' )
-	for line in fh:lines() do
-	    local userid, name
-	    _, _, userid, name = line:find( '([^:]*):[^:]*:[^*]*:[^:]*:([^:]*):[^:]*:[^:]*' )
-	    user_table[userid] = name
-	end
-	fh:close()
+    local project_path = '/var/lib/project_info'
+    local project_postfix = project .. '/' .. project .. '.json'
 
+    -- First try to open the lust version as that one contains more data.
+    local project_file = project_path .. '/lust/' .. project_postfix
+    -- print( 'Attempting to read information from ' ..project_file )
+    local fh = io.open( project_file, 'r' )
+    if fh == nil then
+        project_file = project_path .. '/users/' .. project_postfix
+        -- print( 'Now attempting to read information from ' project_file )
+        fh = io.open( project_file, 'r' )
+    end
+    if fh == nil then 
+        return 'TITLE UNKNOWN'
+    end
+    local project_info_str = fh:read( '*all' )
+    fh:close()
     
-    return user_table
+    local project_timestamp = lfs.attributes( project_file, 'modification' )
 
-
-end  -- function get_user_table
+    local project_info = json_decode( project_info_str )
+    
+    return project_info['title'] or 'TITLE UNKNOWN'
+   
+end  -- function get_project_title
 
 
 -- -----------------------------------------------------------------------------
@@ -525,29 +532,22 @@ end
 --
 
 local argctr = 1
-local project_list = {}
+local user_list = {}
 
 while ( argctr <= #arg )
 do
     if ( arg[argctr] == '-h' or arg[argctr] == '--help' ) then
         print_help()
         os.exit( 0 )
-    elseif ( arg[argctr] == '-p' or arg[argctr] == '--project' ) then
-        argctr = argctr + 1
-        for _, project in ipairs( arg[argctr]:split( ',' ) ) do
-            table.insert( project_list, project )
-        end
-        if debug then io.stderr:write( 'DEBUG: Found -p/--project argument with value ' .. arg[argctr] .. '\n' ) end
     elseif ( arg[argctr] == '-u' or arg[argctr] == '--user' ) then
         argctr = argctr + 1
-        local user_projects = get_projects_from_user( arg[argctr] )
-        for _, project in ipairs( user_projects ) do
-            table.insert( project_list, project )
+        for _, user in ipairs( arg[argctr]:split( ',' ) ) do
+            table.insert( user_list, user )
         end
     elseif arg[argctr]:sub(1, 1)  ~=  '-' then
-        -- An argument that does not start with a dash: treat as a project list
-        for _, project in ipairs( arg[argctr]:split( ',' ) ) do
-            table.insert( project_list, project )
+        -- An argument that does not start with a dash: treat as a user list
+        for _, user in ipairs( arg[argctr]:split( ',' ) ) do
+            table.insert( user_list, user )
         end
         if debug then io.stderr:write( 'DEBUG: Found project argument with value ' .. arg[argctr] .. '\n' ) end        
     else
@@ -559,48 +559,44 @@ end
 
 if #arg == 0 then
 
-    -- No arguments so we use the projects of the current user.without
+    -- No arguments so we use the projects of the current user.
     
     local user_executing = os.getenv( 'USER' )
-    
-    user_projects = get_projects_from_user( user_executing )
-    for _, project in ipairs( user_projects ) do
-        table.insert( project_list, project )
-    end
+    table.insert( user_list, user_executing )
 
 end
 
-local project_path = '/var/lib/project_info'
+local user_path = '/var/lib/user_info'
 local first = true
 
-for _,project in ipairs( project_list )
+for _,user in ipairs( user_list )
 do
 
-    -- print( 'Gathering information for project ' .. project )
+    -- print( 'Gathering information for user ' .. user )
     
-    local project_postfix = project .. '/' .. project .. '.json'
+    local user_postfix = user .. '/' .. user .. '.json'
 
     -- First try to open the lust version as that one contains more data.
-    local project_file = project_path .. '/lust/' .. project_postfix
-    -- print( 'Attempting to read information from ' ..project_file )
-    local fh = io.open( project_file, 'r' )
+    local user_file = user_path .. '/lust/' .. user_postfix
+    -- print( 'Attempting to read information from ' .. user_file )
+    local fh = io.open( user_file, 'r' )
     if fh == nil then
-        project_file = project_path .. '/users/' .. project_postfix
-        -- print( 'Now attempting to read information from ' project_file )
-        fh = io.open( project_file, 'r' )
+        user_file = user_path .. '/users/' .. user_postfix
+        -- print( 'Now attempting to read information from ' user_file )
+        fh = io.open( user_file, 'r' )
     end
     if fh == nil then 
-        io.stderr:write( 'ERROR: You may not have sufficient rights to get information from project ' .. project .. 
-                         ' or the project name is invalid.\n\n' )
+        io.stderr:write( 'ERROR: You may not have sufficient rights to get information from user ' .. user .. 
+                         ' or the user name is invalid.\n\n' )
         os.exit( 1 )
     end
-    local project_info_str = fh:read( '*all' )
+    local user_info_str = fh:read( '*all' )
     fh:close()
     
-    local project_timestamp = lfs.attributes( project_file, 'modification' )
+    local user_timestamp = lfs.attributes( user_file, 'modification' )
 
-    local project_info = json_decode( project_info_str )
-    -- for key,value in pairs( project_info ) do print( 'Key: ' .. key ) end
+    local user_info = json_decode( user_info_str )
+    -- for key,value in pairs( user_info ) do print( 'Key: ' .. key ) end
 
     --
     -- Print the header
@@ -612,51 +608,52 @@ do
     else
         print( '--------------------------------------------------------------------------------\n' )
     end
-    print( 'Information for ' .. project .. ':\n' )
-    print( '- Data was last refreshed at ' .. os.date( '%c', project_timestamp ) )
+    print( 'Information for ' .. user .. ':\n' )
+    print( '- Data was last refreshed at ' .. os.date( '%c', user_timestamp ) )
         
     --
     -- Get some general information
     --
     print( '- General information:' )
-    print( '  - Title: ' .. (project_info['title'] or 'UNKNOWN') )
+    print( '  - GECOS: ' .. (user_info['gecos'] or 'UNKNOWN') )
     
-    if project_info['valid_compute_project']  ~=  nil then
-	    if project_info['valid_compute_project'] then
-	        print( '  - Project is valid for compute' )
+    if user_info['is_active']  ~=  nil then
+	    if user_info['is_active'] then
+	        print( '  - User is an active user (field is_active true)' )
 	    else
-	        print( '  - Project is not valid for compute' )
+	        print( '  - User is not an active user (field is_active false)' )
 	    end
     end
     
-    
-    if project_info['is_open']  ~=  nil then
-	    if project_info['is_open'] then
-	        print( '  - Project is open (field is_open true)' )
+    if user_info['valid_compute_user']  ~=  nil then
+	    if user_info['valid_compute_user'] then
+	        print( '  - User is a valid compute user (field valid_compute_user true)' )
 	    else
-	        print( '  - Project is closed (field is_open false)' )
+	        print( '  - User is a valid compute user (field valid_compute_user false)' )
 	    end
     end
-
+    
+    if user_info['is_banned']  ~=  nil then
+	    if user_info['is_banned'] then
+	        print( '  - User is banned (field is_banned true)' )
+	    else
+	        print( '  - User is not banned (field is_banned false)' )
+	    end
+    end
+    
     --
     -- Storage information
     --
     
-    if project_info['storage_quotas']['directories'] == nil or project_info['storage_quotas']['directories']['projappl']  == nil then
-        print( '- Project is no longer hosted on lumi.' )
+    if user_info['home_fs'] == nil or user_info['home_quota'] == nil then
+        print( '- User is no longer hosted on lumi.' )
     else
-	    local project_scratch_dir = lfs.symlinkattributes( '/scratch/' .. project, 'target' )
-	    local project_fs
-	    if project_scratch_dir == nil then
-	        project_fs = UNKNOWN
-	    else
-		    --
-		    -- Determine the location of the project in the file system
-		    --
-	        _, _, project_fs = string.find( project_scratch_dir, '/pfs/(lustrep%d)/.*' )
-	    end
+        --
+	    -- Determine the location of the project in the file system
+	    --
+        _, _, user_fs = string.find( user_info['home_fs'], '/pfs/(lustrep%d)/users' )
 	    print( '- Storage information:' )
-	    print( '  - Project hosted on ' .. ( project_fs or 'UNKNOWN' ) )
+	    print( '  - User hosted on ' .. ( user_fs or 'UNKNOWN' ) )
  
         --
         -- Check disk quotas
@@ -665,184 +662,54 @@ do
 	    local use_cached = true
 	    local quota = {}
 	    
-	    local quota_cached = project_info['storage_quotas']['directories']
-	    
 	    -- Project directory
-	    quota['project'] = {}
-	    quota['project']['has_dir'] = quota_cached ~= nil and quota_cached ['projappl'] ~=  nil
-	    if quota['project']['has_dir'] then
-		    quota['project']['block_used'] = quota_cached['projappl']['block_quota_used']
-		    quota['project']['block_soft'] = quota_cached['projappl']['block_quota_soft']
-		    quota['project']['block_hard'] = quota_cached['projappl']['block_quota_hard']
-		    quota['project']['inode_used'] = quota_cached['projappl']['inode_quota_used']
-		    quota['project']['inode_soft'] = quota_cached['projappl']['inode_quota_soft']
-		    quota['project']['inode_hard'] = quota_cached['projappl']['inode_quota_hard']
-	    end
-	    
-	    -- Scratch directory
-	    quota['scratch'] = {}
-	    quota['scratch']['has_dir'] = quota_cached ~= nil and quota_cached ['scratch'] ~=  nil
-	    if quota['scratch']['has_dir'] then
-		    quota['scratch']['block_used'] = quota_cached['scratch']['block_quota_used']
-		    quota['scratch']['block_soft'] = quota_cached['scratch']['block_quota_soft']
-		    quota['scratch']['block_hard'] = quota_cached['scratch']['block_quota_hard']
-		    quota['scratch']['inode_used'] = quota_cached['scratch']['inode_quota_used']
-		    quota['scratch']['inode_soft'] = quota_cached['scratch']['inode_quota_soft']
-		    quota['scratch']['inode_hard'] = quota_cached['scratch']['inode_quota_hard']
-		end
-	    
-	    -- Flash directory
-	    quota['flash'] = {}
-	    quota['flash']['has_dir'] = true
-	    quota['flash']['has_dir'] = quota_cached ~= nil and quota_cached ['flash'] ~=  nil
-	    if quota['flash']['has_dir'] then
-		    quota['flash']['block_used'] = quota_cached['flash']['block_quota_used']
-		    quota['flash']['block_soft'] = quota_cached['flash']['block_quota_soft']
-		    quota['flash']['block_hard'] = quota_cached['flash']['block_quota_hard']
-		    quota['flash']['inode_used'] = quota_cached['flash']['inode_quota_used']
-		    quota['flash']['inode_soft'] = quota_cached['flash']['inode_quota_soft']
-		    quota['flash']['inode_hard'] = quota_cached['flash']['inode_quota_hard']
-	    end
-	    
-	
+	    quota = {}
+        quota['block_used'] = user_info['home_quota']['block_quota_used']
+	    quota['block_soft'] = user_info['home_quota']['block_quota_soft']
+	    quota['block_hard'] = user_info['home_quota']['block_quota_hard']
+	    quota['inode_used'] = user_info['home_quota']['inode_quota_used']
+	    quota['inode_soft'] = user_info['home_quota']['inode_quota_soft']
+	    quota['inode_hard'] = user_info['home_quota']['inode_quota_hard']
+    
 	    print( '  - Disk quota (cached info):' )
 	    
-	    local spacer = string.gsub( project, '.', ' ' )
-	
-	    if quota['project']['has_dir'] then
-		    block_perc_used = 100 * quota['project']['block_used'] / quota['project']['block_soft']
-		    inode_perc_used = 100 * quota['project']['inode_used'] / quota['project']['inode_soft']
-		    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
-		    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
-		    
-		    print( '    - /project/' .. project .. ': ' ..
-		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
-		           '% used (' .. convert_to_iec( quota['project']['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['project']['block_soft'] * 1024, 5 ) .. 
-		           '/' .. convert_to_iec( quota['project']['block_hard'] * 1024, 7 ) .. ' soft/hard)' .. block_colour_off ..
-		           ',\n                 ' .. spacer ..  
-		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
-		           '% used (' .. convert_to_si( quota['project']['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['project']['inode_soft'], 5 ) .. 
-		           '  /' .. convert_to_si( quota['project']['inode_hard'], 7 ) .. '   soft/hard)' .. block_colour_off )
-	    end
-	
-	    if quota['scratch']['has_dir'] then
-		    block_perc_used = 100 * quota['scratch']['block_used'] / quota['scratch']['block_soft']
-		    inode_perc_used = 100 * quota['scratch']['inode_used'] / quota['scratch']['inode_soft']
-		    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
-		    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
-		    
-		    print( '    - /scratch/' .. project .. ': ' ..
-		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
-		           '% used (' .. convert_to_iec( quota['scratch']['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['scratch']['block_soft'] * 1024, 5 ) .. 
-		           '/' .. convert_to_iec( quota['scratch']['block_hard'] * 1024, 7 ) .. ' soft/hard)' .. block_colour_off ..
-		           ',\n                 ' .. spacer ..  
-		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
-		           '% used (' .. convert_to_si( quota['scratch']['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['scratch']['inode_soft'], 5 ) .. 
-		           '  /' .. convert_to_si( quota['scratch']['inode_hard'], 7 ) .. '   soft/hard)' .. block_colour_off )
-	    end
-	
-	    if quota['flash']['has_dir'] then
-		    block_perc_used = 100 * quota['flash']['block_used'] / quota['flash']['block_soft']
-		    inode_perc_used = 100 * quota['flash']['inode_used'] / quota['flash']['inode_soft']
-		    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
-		    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
-		    
-		    print( '    - /flash/' .. project .. ':   ' ..
-		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
-		           '% used (' .. convert_to_iec( quota['flash']['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['flash']['block_soft'] * 1024, 5 ) .. 
-		           '/' .. convert_to_iec( quota['flash']['block_hard'] * 1024, 7 ) .. ' soft/hard)' .. block_colour_off ..
-		           ',\n                 ' .. spacer ..  
-		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
-		           '% used (' .. convert_to_si( quota['flash']['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['flash']['inode_soft'], 5 ) .. 
-		           '  /' .. convert_to_si( quota['flash']['inode_hard'], 7 ) .. '   soft/hard)' .. block_colour_off )
-	    end
-    
+        block_perc_used = 100 * quota['block_used'] / quota['block_soft']
+	    inode_perc_used = 100 * quota['inode_used'] / quota['inode_soft']
+	    local block_colour_on, block_colour_off = colour_thresholds( block_perc_used )
+	    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
+	    
+	    print( '    - block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
+	           '% used (' .. convert_to_iec( quota['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['block_soft'] * 1024, 5 ) .. 
+	           '/' .. convert_to_iec( quota['block_hard'] * 1024, 7 ) .. ' soft/hard)' .. block_colour_off ..
+	           ',\n' ..  
+	           '    - file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
+	           '% used (' .. convert_to_si( quota['inode_used'], 5 ) .. '   of ' .. convert_to_si( quota['inode_soft'], 5 ) .. 
+	           '  /' .. convert_to_si( quota['inode_hard'], 7 ) .. '   soft/hard)' .. block_colour_off )
+	        
     end
 
-    --
-    -- Check the allocation
-    --
-    
-    if project_info['billing']['cpu_hours']['alloc'] == 0 and
-       project_info['billing']['gpu_hours']['alloc'] == 0 and
-       project_info['billing']['storage_hours']['alloc'] == 0 and
-       project_info['billing']['qpu_secs']['alloc'] == 0 then
-
-        print( '- The project has no allocation' )
-       
-       
-    else
-        
-        print( '- State of the allocation (cached info):' )
-
-	    if project_info['billing']['cpu_hours']['alloc'] > 0 then
-	        local alloc = project_info['billing']['cpu_hours']['alloc']
-	        local used = project_info['billing']['cpu_hours']['used']
-	        local perc_used = 100 * used / alloc
-	        local colour_on, colour_off = colour_thresholds( perc_used )
-	        print( '  - CPU Khours:      ' .. colour_on .. string.format( '%5.1f', perc_used ) .. '% used (' .. used .. ' of ' .. alloc .. ')' .. colour_off )
-	    else
-	        print( '  - No CPU hours allocated' )
-	    end
-	
-	    if project_info['billing']['gpu_hours']['alloc'] > 0 then
-	        local alloc = project_info['billing']['gpu_hours']['alloc']
-	        local used = project_info['billing']['gpu_hours']['used']
-	        local perc_used = 100 * used / alloc
-	        local colour_on, colour_off = colour_thresholds( perc_used )
-	        print( '  - GPU hours:       ' .. colour_on .. string.format( '%5.1f', perc_used ) .. '% used (' .. used .. ' of ' .. alloc .. ')' .. colour_off )
-	    else
-	        print( '  - No GPU hours allocated' )
-	    end
-	
-	    if project_info['billing']['storage_hours']['alloc'] > 0 then
-	        local alloc = project_info['billing']['storage_hours']['alloc']
-	        local used = project_info['billing']['storage_hours']['used']
-	        local perc_used = 100 * used / alloc
-	        local colour_on, colour_off = colour_thresholds( perc_used )
-	        print( '  - Storage TBhours: ' .. colour_on .. string.format( '%5.1f', perc_used ) .. '% used (' .. used .. ' of ' .. alloc .. ')' .. colour_off )
-	    else
-	        print( '  - No storage TBhours allocated' )
-	    end
-	
-	    if project_info['billing']['qpu_secs']['alloc'] > 0 then
-	        local alloc = project_info['billing']['qpu_secs']['alloc']
-	        local used = project_info['billing']['qpu_secs']['used']
-	        local perc_used = 100 * used / alloc
-	        local colour_on, colour_off = colour_thresholds( perc_used )
-	        print( '  - QPU seconds:     ' .. colour_on .. string.format( '%5.1f', perc_used ) .. '% used (' .. used .. ' of ' .. alloc .. ')' .. colour_off )
-	    end
-    
-    end -- else-part check if there is an allocation.
     
     --
-    -- List the project members
+    -- List the projects
     --
     
-    if project_info['members']  ~=  nil then
+    local project_list = get_projects_from_user( user )
     
-        print( '- Project members (by userid):' )
+    if project_list ~=  nil and #project_list > 0 then
+    
+        print( '- Projects on the system the user is a member of:' )
         
-        local member_list = {}
-        for member,_ in pairs( project_info['members'] ) do table.insert( member_list, member ) end
-        table.sort( member_list )
+        for _,project in ipairs( project_list ) do
         
-        local user_table = get_user_table()
-        
-        for _,member in ipairs( member_list ) do
-            if project_info['members'][member]['active'] then
-                -- Active member, get GECOS information
-                if user_table[member] == nil then
-                    print( '  - ' .. member .. ' (active)' )
-                else
-                    print( '  - ' .. member .. ' - ' .. user_table[member] )
-                end 
-            else
-                print( '  - ' .. member .. ' (inactive)' )
-            end
+            print( '  - ' .. project .. ' - ' .. get_project_title( project ) )
+            
         end
+        
+    else
     
-    end -- if project_info['members']  ~=  nil then
+        print( '- No projects of the user found on the system' )
+    
+    end -- if project_list ~=  nil and #project_list > 0
 
     print( )
 
