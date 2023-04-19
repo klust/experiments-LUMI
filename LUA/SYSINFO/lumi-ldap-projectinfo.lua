@@ -381,6 +381,154 @@ end
 
 -- -----------------------------------------------------------------------------
 --
+-- Function to convert to KiB/MiB/GiB/TiB/PiB.
+--
+-- Pretty dirty code at the moment that could be made a lot shorter with
+-- a loop and constant array, and the second part could be moved to a separate
+-- function also as it is repeaded elsewhere.
+--
+-- -----------------------------------------------------------------------------
+
+function convert_to_iec( value, width )
+
+    -- Note we currently assue width >= 5.
+    -- The width parameter also does not include the width for the units.
+
+    local value_str
+    local unit_str
+
+    if value < 1024 then  
+        unit_str = 'B  '
+    else
+        value = value / 1024
+        if value < 1024 then
+            unit_str = 'KiB'
+        else
+            value = value / 1024
+            if value < 1024 then
+                unit_str = 'MiB'
+            else
+                value = value / 1024
+                if value < 1024 then
+                    unit_str = 'GiB'
+                else
+                    value = value / 1024
+                    if value < 1024 then
+                        unit_str = 'TiB'
+                    else
+                        value = value / 1024
+                        unit_str = 'PiB'
+                    end
+                end
+            end
+        end    
+    end
+
+
+    if value < 10 then
+        local field_post = width - 2
+        local field_pre = 1
+        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
+        value_str = string.format( format_string, value )
+    elseif value < 100 then
+        local field_post = width - 3
+        local field_pre = 2
+        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
+        value_str = string.format( format_string, value )
+    elseif value < 1000 then
+        local field_post = width - 4
+        local field_pre = 3
+        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
+        value_str = string.format( format_string, value )
+    else
+        local field_post = width - 5
+        local field_pre
+        if width == 5 then field_pre = width else field_pre = 4 end
+        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
+        value_str = string.format( format_string, value )
+    end    
+    
+    return value_str .. unit_str
+
+end
+
+
+-- -----------------------------------------------------------------------------
+--
+-- Function to convert to SI: K, M, G, T, P
+--
+-- Pretty dirty code at the moment that could be made a lot shorter with
+-- a loop and constant array, and the second part could be moved to a separate
+-- function also as it is repeaded elsewhere.
+--
+-- -----------------------------------------------------------------------------
+
+function convert_to_si( value, width )
+
+    -- Note we currently assue width >= 5.
+    -- The width parameter also does not include the width for the units.
+
+    local value_str
+    local unit_str
+
+    if value < 1000 then  
+        unit_str = ' '
+    else
+        value = value / 1000
+        if value < 1000 then
+            unit_str = 'K'
+        else
+            value = value / 1000
+            if value < 1000 then
+                unit_str = 'M'
+            else
+                value = value / 1000
+                if value < 1000 then
+                    unit_str = 'G'
+                else
+                    value = value / 1000
+                    if value < 1000 then
+                        unit_str = 'T'
+                    else
+                        value = value / 1000
+                        unit_str = 'P'
+                    end
+                end
+            end
+        end    
+    end
+
+
+    if value < 10 then
+        local field_post = width - 2
+        local field_pre = 1
+        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
+        value_str = string.format( format_string, value )
+    elseif value < 100 then
+        local field_post = width - 3
+        local field_pre = 2
+        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
+        value_str = string.format( format_string, value )
+    elseif value < 1000 then
+        local field_post = width - 4
+        local field_pre = 3
+        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
+        value_str = string.format( format_string, value )
+    else
+        local field_post = width - 5
+        local field_pre
+        if width == 5 then field_pre = width else field_pre = 4 end
+        local format_string = '%' .. field_pre .. '.' .. field_post .. 'f'
+        value_str = string.format( format_string, value )
+    end    
+    
+    return value_str .. unit_str
+
+end
+
+
+-- -----------------------------------------------------------------------------
+--
 -- Process the command line arguments
 --
 
@@ -576,9 +724,13 @@ do
 		    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
 		    
 		    print( '    - /project/' .. project .. ': ' ..
-		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. '% used (' .. quota['project']['block_used'] .. ' of ' .. quota['project']['block_soft'] .. '/' .. quota['project']['block_hard'] .. ' soft/hard)' .. block_colour_off ..
+		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
+		           '% used (' .. convert_to_iec( quota['project']['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['project']['block_soft'] * 1024, 5 ) .. 
+		           '/' .. convert_to_iec( quota['project']['block_hard'] * 1024, 5 ) .. ' soft/hard)' .. block_colour_off ..
 		           ',\n                 ' .. spacer ..  
-		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. '% used (' .. quota['project']['inode_used'] .. ' of ' .. quota['project']['inode_soft'] .. '/' .. quota['project']['inode_hard'] .. ' soft/hard)' .. block_colour_off )
+		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
+		           '% used (' .. convert_to_si( quota['project']['inode_used'], 5 ) .. ' of ' .. convert_to_si( quota['project']['inode_soft'], 5 ) .. 
+		           '/' .. convert_to_si( quota['project']['inode_hard'], 5 ) .. ' soft/hard)' .. block_colour_off )
 	    end
 	
 	    if quota['scratch']['has_dir'] then
@@ -588,9 +740,13 @@ do
 		    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
 		    
 		    print( '    - /scratch/' .. project .. ': ' ..
-		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. '% used (' .. quota['scratch']['block_used'] .. ' of ' .. quota['scratch']['block_soft'] .. '/' .. quota['scratch']['block_hard'] .. ' soft/hard)' .. block_colour_off ..
+		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
+		           '% used (' .. convert_to_iec( quota['scratch']['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['scratch']['block_soft'] * 1024, 5 ) .. 
+		           '/' .. convert_to_iec( quota['scratch']['block_hard'] * 1024, 5 ) .. ' soft/hard)' .. block_colour_off ..
 		           ',\n                 ' .. spacer ..  
-		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. '% used (' .. quota['scratch']['inode_used'] .. ' of ' .. quota['scratch']['inode_soft'] .. '/' .. quota['scratch']['inode_hard'] .. ' soft/hard)' .. block_colour_off )
+		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
+		           '% used (' .. convert_to_si( quota['scratch']['inode_used'], 5 ) .. ' of ' .. convert_to_si( quota['scratch']['inode_soft'], 5 ) .. 
+		           '/' .. convert_to_si( quota['scratch']['inode_hard'], 5 ) .. ' soft/hard)' .. block_colour_off )
 	    end
 	
 	    if quota['flash']['has_dir'] then
@@ -600,9 +756,13 @@ do
 		    local inode_colour_on, inode_colour_off = colour_thresholds( block_perc_used )
 		    
 		    print( '    - /flash/' .. project .. ':   ' ..
-		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. '% used (' .. quota['flash']['block_used'] .. ' of ' .. quota['flash']['block_soft'] .. '/' .. quota['flash']['block_hard'] .. ' soft/hard)' .. block_colour_off ..
+		           'block quota: '  .. block_colour_on .. string.format( '%5.1f', block_perc_used ) .. 
+		           '% used (' .. convert_to_iec( quota['flash']['block_used'] * 1024, 5 ) .. ' of ' .. convert_to_iec( quota['flash']['block_soft'] * 1024, 5 ) .. 
+		           '/' .. convert_to_iec( quota['flash']['block_hard'] * 1024, 5 ) .. ' soft/hard)' .. block_colour_off ..
 		           ',\n                 ' .. spacer ..  
-		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. '% used (' .. quota['flash']['inode_used'] .. ' of ' .. quota['flash']['inode_soft'] .. '/' .. quota['flash']['inode_hard'] .. ' soft/hard)' .. block_colour_off )
+		           'file quota:  ' .. inode_colour_on .. string.format( '%5.1f', inode_perc_used ) .. 
+		           '% used (' .. convert_to_si( quota['flash']['inode_used'], 5 ) .. ' of ' .. convert_to_si( quota['flash']['inode_soft'], 5 ) .. 
+		           '/' .. convert_to_si( quota['flash']['inode_hard'], 5 ) .. ' soft/hard)' .. block_colour_off )
 	    end
     
     end
