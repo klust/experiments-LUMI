@@ -1,0 +1,30 @@
+#! /usr/bin/bash
+#
+# Run all tests with lumi-CPETools on the login node.
+#
+
+stack_version='22.12'
+CPE_version='1.0'
+
+module load LUMI/$stack_version partition/L
+
+for prgenv in GNU Cray AOCC
+do
+
+    echo -e "\n\nTesting cpe${prgenv} version\n\n"
+    
+    module load lumi-CPEtools/${CPE_version}-cpe${prgenv}-${stack_version}
+    
+    echo -e "\nserial_check:\n"
+    serial_check -r
+    
+    echo -e "\nomp_check:\n"
+    OMP_NUM_THREADS=4 omp_check -r
+    
+    echo -e "\mpi_check:\n"
+    mpi_check -r
+    
+    echo -e "\nhybrid_check:\n"
+    OMP_NUM_THREADS=4 hybrid_check -r
+    
+done
