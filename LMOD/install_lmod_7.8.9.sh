@@ -10,7 +10,7 @@
 lua_version=5.4.4
 luarocks_version=3.9.2
 tcl_version=8.6.13
-lmod_version=8.7.25
+lmod_version=7.8.9
 
 parallel=16
 
@@ -22,7 +22,7 @@ installroot=$HOME/appl_lmod
 mkdir -p $installroot
 
 # Just to be sure, add the binary directory to the PATH.
-PATH=$installroot/bin:$PATH
+PATH=$installroot:$PATH
 
 cd $HOME
 mkdir -p work
@@ -36,26 +36,22 @@ cd work
 cd $HOME/work
 # https://www.lua.org/ftp/lua-5.4.3.tar.gz
 [[ -f lua-$lua_version.tar.gz ]] || wget https://www.lua.org/ftp/lua-$lua_version.tar.gz
-[[ -d lua-$lua_version ]] && /bin/rm -rf lua-$lua_version
 tar -xf lua-$lua_version.tar.gz
 cd $HOME/work/lua-$lua_version
 # Patch src/luaconf.h to use the correct value for LUA_ROOT
 # as otherwise packages will not be found
 sed -i -e "s/\/usr\/local\//${HOME//\//\\\/}\/appl_lmod\//" src/luaconf.h
 # Build
-make -j ${parallel:-1} linux 
-make install INSTALL_TOP=$installroot
+make -j $parallel linux install INSTALL_TOP=$installroot
 #
 # - LuaRocks
 #
 cd $HOME/work
 [[ -f luarocks-$luarocks_version.tar.gz ]] || wget https://luarocks.org/releases/luarocks-$luarocks_version.tar.gz
-[[ -d luarocks-$luarocks_version ]] && /bin/rm -rf luarocks-$luarocks_version
 tar -xf luarocks-$luarocks_version.tar.gz
 cd $HOME/work/luarocks-$luarocks_version
 ./configure --with-lua=$installroot --prefix=$installroot
-make -j ${parallel:-1} 
-make install
+make -j $parallel ; make install
 #
 # - posix and filesystem packages
 #
@@ -69,12 +65,10 @@ $installroot/bin/luarocks --lua-dir $installroot install luafilesystem
 cd $HOME/work
 # https://prdownloads.sourceforge.net/tcl/tcl8.6.11-src.tar.gz
 [[ -f tcl$tcl_version-src.tar.gz ]] || wget https://prdownloads.sourceforge.net/tcl/tcl$tcl_version-src.tar.gz
-[[ -d tcl$tcl_version ]] && /bin/rm -rf tcl$tcl_version
 tar -xf tcl$tcl_version-src.tar.gz
 cd $HOME/work/tcl$tcl_version/unix
 ./configure --prefix=$installroot
-make -j ${parallel:-1} 
-make install
+make -j $parallel ; make install
 cd $installroot/bin
 ln -s tclsh8.6 tclsh
 
@@ -82,8 +76,7 @@ ln -s tclsh8.6 tclsh
 # Install Lmod
 #
 cd $HOME/work
-[[ -f Lmod-$lmod_version.tar.gz ]] || eval "wget https://github.com/TACC/Lmod/archive/refs/tags/$lmod_version.tar.gz ; mv $lmod_version.tar.gz Lmod-$lmod_version.tar.gz"
-[[ -d Lmod-$lmod_version ]] && /bin/rm -rf Lmod-$lmod_version
+[[ -f lmod-$lmod_version.tar.gz ]] || eval "wget https://github.com/TACC/Lmod/archive/refs/tags/$lmod_version.tar.gz ; mv $lmod_version.tar.gz lmod-$lmod_version.tar.gz"
 tar -xf lmod-$lmod_version.tar.gz
 cd $HOME/work/Lmod-$lmod_version
 # Make a correction to Makefile.in
@@ -96,7 +89,7 @@ PATH_TO_TCLSH=$installroot/bin/tclsh8.6 \
             --with-lua_include=$installroot/include \
             --with-lua=$installroot/bin/lua \
             --with-luac=$installroot/bin/luac
-make install
+make -j $parallel install
 cd $installroot/share/lmod/lmod/libexec
 sed -i -e 's| tclsh"| " .. cosmic:value("LMOD_TCLSH")|' Configuration.lua
 # The next sed commands are not really necessary since Lmod calls these script 
