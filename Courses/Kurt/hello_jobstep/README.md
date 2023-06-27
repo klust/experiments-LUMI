@@ -1,4 +1,4 @@
-# Experiments with the helo_jobstep exercise.
+# Experiments with the hello_jobstep exercise.
 
 ## Compiling
 
