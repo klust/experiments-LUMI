@@ -16,7 +16,9 @@ echo "Starting job $SLURM_JOB_ID at `date`"
 
 module load LUMI/22.12 partition/G
 
-EXE='hello_jobstep-cce.x' ; module load cpeCray
+#EXE='hello_jobstep-cce.x' ; module load cpeCray
+EXE='hello_jobstep-gcc.x' ; module load cpeGNU
+#EXE='hello_jobstep-rocm.x' ; module load cpeAMD
 
 [ -f select_gpu_naive.sh ] && /bin/rm select_gpu_naive.sh
 cat - >select_gpu_naive.sh <<EOF

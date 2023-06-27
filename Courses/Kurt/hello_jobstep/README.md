@@ -8,20 +8,32 @@
     
     Executable: `hell_jobstep-cce.x`
 
+-   We tested compilation in the `LUMI/22.12 partiton/G cpeGNU/22.12` environment.
+
+    Makefile: `Makefile.cpeGNU`
+    
+    Executable: `hell_jobstep-gcc.x`
+
+-   We tested compilation in the `LUMI/22.12 partiton/G cpeAMD/22.12` environment.
+
+    Makefile: `Makefile.cpeAMD`
+    
+    Executable: `hell_jobstep-rocm.x`
+
+As the program only includes calls to the HIP runtime but no HIP kernels, it is not
+needed to use `hipcc` to compile, but then one must take care of defining a
+preprocessor directive (for the HIP headers) and ensure that the right libraries
+are added to the link line.
+
 
 ## Running
 
-Tested with `cpeCray`.
+Tested with `cpeCray`, `cpeGNU` and `cpeAMD`.
 
 -   Job script using 1 GPU per task: `job-1gpuPerTask.slurm`.
-    
-    
-    
-    
+      
 -   Job script using 2 GPUs per task and 4 tasks per node:
     `job-2gpuPerTask.slurm`
-    
-    
 
 
 **Note:** According to the Crusher documentation Cray MPICH does not support

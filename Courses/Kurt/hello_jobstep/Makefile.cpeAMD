@@ -1,0 +1,23 @@
+COMP   = CC
+
+CFLAGS = -std=c++11 -fopenmp -D__HIP_PLATFORM_AMD__
+LFLAGS = -fopenmp -L${ROCM_PATH}/lib -lamdhip64
+EXE = hello_jobstep-rocm.x
+
+exe : $(EXE)
+
+$(EXE): hello_jobstep.o
+#	hipcc ${LFLAGS} hello_jobstep.o -o $(EXE)
+	${COMP} ${LFLAGS} hello_jobstep.o -o $(EXE)
+
+hello_jobstep.o: hello_jobstep.cpp
+	${COMP} ${CFLAGS} -c hello_jobstep.cpp
+
+.PHONY: clean
+
+cleanall: clean
+	rm -f *.out
+
+clean:
+	rm -f $(EXE) *.o select_gpu_naive.sh select_gpu_opti.sh
+
