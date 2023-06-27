@@ -1,0 +1,267 @@
+Starting job 3814575 at Tue 27 Jun 2023 06:49:45 PM EEST
+
+Proper mapping:
+
+CPU die 0 providing HWT 000-007 and 064-071 to GPU die 4 with Bus_ID d1
+CPU die 1 providing HWT 008-015 and 072-079 to GPU die 5 with Bus_ID d6
+CPU die 2 providing HWT 016-023 and 080-087 to GPU die 2 with Bus_ID c9
+CPU die 3 providing HWT 024-031 and 088-095 to GPU die 3 with Bus_ID ce
+CPU die 4 providing HWT 032-039 and 096-103 to GPU die 6 with Bus_ID d9
+CPU die 5 providing HWT 040-047 and 104-111 to GPU die 7 with Bus_ID de
+CPU die 6 providing HWT 048-055 and 112-119 to GPU die 0 with Bus_ID c1
+CPU die 7 providing HWT 056-063 and 120-127 to GPU die 1 with Bus_ID c6
+
+The only reliable way to recognize the physical GPU die is via the PCIe Bus_ID.
+
+RT_GPU_ID: Numbered from 0 to the number of devices attached to the rank minus 1.
+GPU_ID:    Content of ROCR_VISIBLE_DEVICES.
+
+
+TEST 1: No binding.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: 
+GPU binding: --gpus-per-task=1
+
+srun -N 1 -n 8  --gpus-per-task=1  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 001 - OMP 000 - HWT 002 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c6
+MPI 002 - OMP 000 - HWT 003 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 004 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 005 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d1
+MPI 005 - OMP 000 - HWT 006 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d6
+MPI 006 - OMP 000 - HWT 007 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d9
+MPI 007 - OMP 000 - HWT 008 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID de
+
+TEST 2: Optimal reordering CPU with map_cpu, no explicit GPU mapping.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=map_cpu:49,57,17,25,1,9,33,41
+GPU binding: --gpus-per-task=1
+
+srun -N 1 -n 8 --cpu-bind=map_cpu:49,57,17,25,1,9,33,41 --gpus-per-task=1  ./run_command.sh | sort
+MPI 000 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 001 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d1
+MPI 005 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d6
+MPI 006 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d9
+MPI 007 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID de
+
+TEST 3: Optimal reordering CPU with mask_cpu, no explicit GPU mapping.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=mask_cpu:0x00fe000000000000,0xfe00000000000000,0x00fe0000,0xfe000000,0x00fe,0xfe00,0x00fe00000000,0xfe0000000000
+GPU binding: --gpus-per-task=1
+
+srun -N 1 -n 8 --cpu-bind=mask_cpu:0x00fe000000000000,0xfe00000000000000,0x00fe0000,0xfe000000,0x00fe,0xfe00,0x00fe00000000,0xfe0000000000 --gpus-per-task=1  ./run_command.sh | sort
+MPI 000 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 001 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d1
+MPI 005 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d6
+MPI 006 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d9
+MPI 007 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID de
+
+TEST 4: Single core CPU die x to MPI rank x, optimal GPU binding with --gpu-bind=map_gpu.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=map_cpu:1,9,17,25,33,41,49,57
+GPU binding: --gpu-bind=map_gpu:4,5,2,3,6,7,0,1
+
+srun -N 1 -n 8 --cpu-bind=map_cpu:1,9,17,25,33,41,49,57 --gpu-bind=map_gpu:4,5,2,3,6,7,0,1  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d1
+MPI 001 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d9
+MPI 005 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID de
+MPI 006 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 007 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c6
+
+TEST 5: 7 cores CPU die x to MPI rank x, GPU binding with --gpu-bind=map_gpu.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=mask_cpu:0xfe,0xfe00,0xfe0000,0xfe000000,0xfe00000000,0xfe0000000000,0xfe000000000000,0xfe00000000000000
+GPU binding: --gpu-bind=map_gpu:4,5,2,3,6,7,0,1
+
+srun -N 1 -n 8 --cpu-bind=mask_cpu:0xfe,0xfe00,0xfe0000,0xfe000000,0xfe00000000,0xfe0000000000,0xfe000000000000,0xfe00000000000000 --gpu-bind=map_gpu:4,5,2,3,6,7,0,1  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d1
+MPI 001 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d9
+MPI 005 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID de
+MPI 006 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 007 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c6
+
+TEST 6: Single core CPU die x to MPI rank x, optimal GPU binding with --gpu-bind=mask_gpu.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=map_cpu:1,9,17,25,33,41,49,57
+GPU binding: --gpu-bind=mask_gpu:0x10,0x20,0x04,0x08,0x40,0x80,0x01,0x02
+
+srun -N 1 -n 8 --cpu-bind=map_cpu:1,9,17,25,33,41,49,57 --gpu-bind=mask_gpu:0x10,0x20,0x04,0x08,0x40,0x80,0x01,0x02  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d1
+MPI 001 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d9
+MPI 005 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID de
+MPI 006 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 007 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c6
+
+TEST 7: 7 cores CPU die x to MPI rank x, GPU binding with --gpu-bind=mask_gpu.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=mask_cpu:0xfe,0xfe00,0xfe0000,0xfe000000,0xfe00000000,0xfe0000000000,0xfe000000000000,0xfe00000000000000
+GPU binding: --gpu-bind=mask_gpu:0x10,0x20,0x04,0x08,0x40,0x80,0x01,0x02
+
+srun -N 1 -n 8 --cpu-bind=mask_cpu:0xfe,0xfe00,0xfe0000,0xfe000000,0xfe00000000,0xfe0000000000,0xfe000000000000,0xfe00000000000000 --gpu-bind=mask_gpu:0x10,0x20,0x04,0x08,0x40,0x80,0x01,0x02  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d1
+MPI 001 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d9
+MPI 005 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID de
+MPI 006 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 007 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c6
+
+TEST 8: Single core CPU die x to MPI rank x, optimal GPU binding with --gpu-bind=mask_gpu.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=map_cpu:1,9,17,25,33,41,49,57
+GPU binding: --gpu-bind=map_gpu:4,5,2,3,6,7,0,1
+
+srun -N 1 -n 8 --cpu-bind=map_cpu:1,9,17,25,33,41,49,57 --gpu-bind=map_gpu:4,5,2,3,6,7,0,1  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d1
+MPI 001 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d9
+MPI 005 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID de
+MPI 006 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 007 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c6
+
+TEST 9: 7 cores CPU die x to MPI rank x, GPU binding with --gpu-bind=mask_gpu.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=mask_cpu:0xfe,0xfe00,0xfe0000,0xfe000000,0xfe00000000,0xfe0000000000,0xfe000000000000,0xfe00000000000000
+GPU binding: --gpu-bind=map_gpu:4,5,2,3,6,7,0,1
+
+srun -N 1 -n 8 --cpu-bind=mask_cpu:0xfe,0xfe00,0xfe0000,0xfe000000,0xfe00000000,0xfe0000000000,0xfe000000000000,0xfe00000000000000 --gpu-bind=map_gpu:4,5,2,3,6,7,0,1  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d1
+MPI 001 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID d9
+MPI 005 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID de
+MPI 006 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 007 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c6
+
+TEST 10: Single core CPU die x to MPI rank x, select_gpu_naive.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=map_cpu:1,9,17,25,33,41,49,57
+GPU binding: ./select_gpu_naive.sh
+
+srun -N 1 -n 8 --cpu-bind=map_cpu:1,9,17,25,33,41,49,57 ./select_gpu_naive.sh  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 001 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 1 - Bus_ID c6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 2 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 3 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 4 - Bus_ID d1
+MPI 005 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 5 - Bus_ID d6
+MPI 006 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 6 - Bus_ID d9
+MPI 007 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 7 - Bus_ID de
+
+TEST 11: 7 cores CPU die x to MPI rank x, select_gpu_naive.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=mask_cpu:0xfe,0xfe00,0xfe0000,0xfe000000,0xfe00000000,0xfe0000000000,0xfe000000000000,0xfe00000000000000
+GPU binding: ./select_gpu_naive.sh
+
+srun -N 1 -n 8 --cpu-bind=mask_cpu:0xfe,0xfe00,0xfe0000,0xfe000000,0xfe00000000,0xfe0000000000,0xfe000000000000,0xfe00000000000000 ./select_gpu_naive.sh  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 001 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 1 - Bus_ID c6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 2 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 3 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 4 - Bus_ID d1
+MPI 005 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 5 - Bus_ID d6
+MPI 006 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 6 - Bus_ID d9
+MPI 007 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 7 - Bus_ID de
+
+TEST 12: Single core CPU die x to MPI rank x, select_gpu_opti.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=map_cpu:1,9,17,25,33,41,49,57
+GPU binding: ./select_gpu_opti.sh
+
+srun -N 1 -n 8 --cpu-bind=map_cpu:1,9,17,25,33,41,49,57 ./select_gpu_opti.sh  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 4 - Bus_ID d1
+MPI 001 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 5 - Bus_ID d6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 2 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 3 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 6 - Bus_ID d9
+MPI 005 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 7 - Bus_ID de
+MPI 006 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 007 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 1 - Bus_ID c6
+
+TEST 13: 7 cores CPU die x to MPI rank x, select_gpu_opti.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=mask_cpu:0xfe,0xfe00,0xfe0000,0xfe000000,0xfe00000000,0xfe0000000000,0xfe000000000000,0xfe00000000000000
+GPU binding: ./select_gpu_opti.sh
+
+srun -N 1 -n 8 --cpu-bind=mask_cpu:0xfe,0xfe00,0xfe0000,0xfe000000,0xfe00000000,0xfe0000000000,0xfe000000000000,0xfe00000000000000 ./select_gpu_opti.sh  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 4 - Bus_ID d1
+MPI 001 - OMP 000 - HWT 009 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 5 - Bus_ID d6
+MPI 002 - OMP 000 - HWT 017 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 2 - Bus_ID c9
+MPI 003 - OMP 000 - HWT 025 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 3 - Bus_ID ce
+MPI 004 - OMP 000 - HWT 033 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 6 - Bus_ID d9
+MPI 005 - OMP 000 - HWT 041 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 7 - Bus_ID de
+MPI 006 - OMP 000 - HWT 049 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 0 - Bus_ID c1
+MPI 007 - OMP 000 - HWT 057 - Node nid005707 - RT_GPU_ID 0 - GPU_ID 1 - Bus_ID c6
+
+... finished job 3814575 at Tue 27 Jun 2023 06:49:55 PM EEST

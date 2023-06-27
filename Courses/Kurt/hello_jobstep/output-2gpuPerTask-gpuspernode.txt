@@ -1,0 +1,155 @@
+Starting job 3814610 at Tue 27 Jun 2023 07:00:42 PM EEST
+
+Proper mapping:
+
+CPU die 0 providing HWT 000-007 and 064-071 to GPU die 4 with Bus_ID d1
+CPU die 1 providing HWT 008-015 and 072-079 to GPU die 5 with Bus_ID d6
+CPU die 2 providing HWT 016-023 and 080-087 to GPU die 2 with Bus_ID c9
+CPU die 3 providing HWT 024-031 and 088-095 to GPU die 3 with Bus_ID ce
+CPU die 4 providing HWT 032-039 and 096-103 to GPU die 6 with Bus_ID d9
+CPU die 5 providing HWT 040-047 and 104-111 to GPU die 7 with Bus_ID de
+CPU die 6 providing HWT 048-055 and 112-119 to GPU die 0 with Bus_ID c1
+CPU die 7 providing HWT 056-063 and 120-127 to GPU die 1 with Bus_ID c6
+
+The only reliable way to recognize the physical GPU die is via the PCIe Bus_ID.
+
+RT_GPU_ID: HIP runtime GPU ID, mumbered from 0 to the number of devices attached to the rank minus 1.
+GPU_ID:    Content of ROCR_VISIBLE_DEVICES.
+
+
+TEST 1: No binding.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: 
+GPU binding: --gpus-per-task=2
+
+srun -N 1 -n 4  --gpus-per-task=2  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c1,c6
+MPI 001 - OMP 000 - HWT 002 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c9,ce
+MPI 002 - OMP 000 - HWT 003 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID d1,d6
+MPI 003 - OMP 000 - HWT 004 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID d9,de
+
+TEST 2: Optimal eordering CPU with map_cpu, no explicit GPU mapping.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=map_cpu:49,17,1,33
+GPU binding: --gpus-per-task=2
+
+srun -N 1 -n 4 --cpu-bind=map_cpu:49,17,1,33 --gpus-per-task=2  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 049 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c1,c6
+MPI 001 - OMP 000 - HWT 017 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c9,ce
+MPI 002 - OMP 000 - HWT 001 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID d1,d6
+MPI 003 - OMP 000 - HWT 033 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID d9,de
+
+TEST 3: Optimal reordering CPU with mask_cpu, no explicit GPU mapping.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=mask_cpu:0xfffe000000000000,0xfffe0000,0xfffe,0xfffe00000000
+GPU binding: --gpus-per-task=2
+
+srun -N 1 -n 4 --cpu-bind=mask_cpu:0xfffe000000000000,0xfffe0000,0xfffe,0xfffe00000000 --gpus-per-task=2  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 049 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c1,c6
+MPI 001 - OMP 000 - HWT 017 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c9,ce
+MPI 002 - OMP 000 - HWT 001 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID d1,d6
+MPI 003 - OMP 000 - HWT 033 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID d9,de
+
+TEST 4: single core NUMA domain x to MPI rank x, GPU binding with --gpu-bind=mask_gpu.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=map_cpu:1,17,33,49
+GPU binding: --gpu-bind=mask_gpu:0x30,0x0c,0xc0,0x03
+
+srun -N 1 -n 4 --cpu-bind=map_cpu:1,17,33,49 --gpu-bind=mask_gpu:0x30,0x0c,0xc0,0x03  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID d1,d6
+MPI 001 - OMP 000 - HWT 017 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c9,ce
+MPI 002 - OMP 000 - HWT 033 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID d9,de
+MPI 003 - OMP 000 - HWT 049 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c1,c6
+
+TEST 5: 15 cores NUMA domain x to MPI rank x, optimal GPU binding with --gpu-bind=mask_gpu.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=mask_cpu:0xfffe,0xfffe0000,0xfffe00000000,0xfffe000000000000
+GPU binding: --gpu-bind=mask_gpu:0x30,0x0c,0xc0,0x03
+
+srun -N 1 -n 4 --cpu-bind=mask_cpu:0xfffe,0xfffe0000,0xfffe00000000,0xfffe000000000000 --gpu-bind=mask_gpu:0x30,0x0c,0xc0,0x03  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID d1,d6
+MPI 001 - OMP 000 - HWT 017 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c9,ce
+MPI 002 - OMP 000 - HWT 033 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID d9,de
+MPI 003 - OMP 000 - HWT 049 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c1,c6
+
+TEST 6: Single core CPU NUMA domain x to MPI rank x, select_gpu_naive.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=map_cpu:1,17,33,49
+GPU binding: ./select_gpu_naive.sh
+
+srun -N 1 -n 4 --cpu-bind=map_cpu:1,17,33,49 ./select_gpu_naive.sh  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c1,c6
+MPI 001 - OMP 000 - HWT 017 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 2,3 - Bus_ID c9,ce
+MPI 002 - OMP 000 - HWT 033 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 4,5 - Bus_ID d1,d6
+MPI 003 - OMP 000 - HWT 049 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 6,7 - Bus_ID d9,de
+
+TEST 7: 15 cores NUMA domain x to MPI rank x, select_gpu_naive.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=mask_cpu:0xfffe,0xfffe0000,0xfffe00000000,0xfffe000000000000
+GPU binding: ./select_gpu_naive.sh
+
+srun -N 1 -n 4 --cpu-bind=mask_cpu:0xfffe,0xfffe0000,0xfffe00000000,0xfffe000000000000 ./select_gpu_naive.sh  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c1,c6
+MPI 001 - OMP 000 - HWT 017 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 2,3 - Bus_ID c9,ce
+MPI 002 - OMP 000 - HWT 033 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 4,5 - Bus_ID d1,d6
+MPI 003 - OMP 000 - HWT 049 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 6,7 - Bus_ID d9,de
+
+TEST 8: single core NUMA domain x to MPI rank x, select_gpu_opti.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=map_cpu:1,17,33,49
+GPU binding: ./select_gpu_opti.sh
+
+srun -N 1 -n 4 --cpu-bind=map_cpu:1,17,33,49 ./select_gpu_opti.sh  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 4,5 - Bus_ID d1,d6
+MPI 001 - OMP 000 - HWT 017 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 2,3 - Bus_ID c9,ce
+MPI 002 - OMP 000 - HWT 033 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 6,7 - Bus_ID d9,de
+MPI 003 - OMP 000 - HWT 049 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c1,c6
+
+TEST 9: 15 cores NUMA domain x to MPI rank x, select_gpu_opti.
+
+OMP variables:
+OMP_PROC_BIND=close
+OMP_PLACES=cores
+OMP_NUM_THREADS=1
+CPU bind argument: --cpu-bind=mask_cpu:0xfffe,0xfffe0000,0xfffe00000000,0xfffe000000000000
+GPU binding: ./select_gpu_opti.sh
+
+srun -N 1 -n 4 --cpu-bind=mask_cpu:0xfffe,0xfffe0000,0xfffe00000000,0xfffe000000000000 ./select_gpu_opti.sh  ./hello_jobstep-cce.x | sort
+MPI 000 - OMP 000 - HWT 001 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 4,5 - Bus_ID d1,d6
+MPI 001 - OMP 000 - HWT 017 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 2,3 - Bus_ID c9,ce
+MPI 002 - OMP 000 - HWT 033 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 6,7 - Bus_ID d9,de
+MPI 003 - OMP 000 - HWT 049 - Node nid005036 - RT_GPU_ID 0,1 - GPU_ID 0,1 - Bus_ID c1,c6
+
+... finished job 3814610 at Tue 27 Jun 2023 07:00:49 PM EEST
