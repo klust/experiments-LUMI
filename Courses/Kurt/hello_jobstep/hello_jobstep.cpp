@@ -15,7 +15,7 @@ Written by Tom Papatheodore
 #include <hip/hip_runtime.h>
 #include <omp.h>
 
-#define DEBUG
+// #define DEBUG
 #define BARDPEAK
 
 #define EXIT_SUCCESS         0
@@ -28,7 +28,6 @@ Written by Tom Papatheodore
 #define SINGLE_PCIBUSID_STRLEN 13  // Full bus IDs of the form: 0000:c1:00.0
 #define LIST_PCIBUSID_STRLEN   MAXGPUS * (13 + 1) // 13: length of the items in the map below.
                                                   // 1: , and trailing \0 after last item
-
 const char * const busid_map[MAXGPUS] = {
 		"0000:c1:00.0",
 		"0000:c6:00.0",
@@ -59,6 +58,19 @@ const char * const busid_map_values_long[MAXGPUS] = {
 		"d9(GCD6/CCD4)",
 		"dc(GCD7/CCD5)"
     };
+
+#define L3DOMAINS 8
+
+unsigned int HWT_to_L3domain( unsigned int HWT ) {
+
+	unsigned int HWT2 = HWT;
+
+	HWT &= (unsigned int) 63; // Corresponds to computing the physical core number.
+    HWT >>= 3;                // Divide by 8 to get the GCD / L3 domain
+
+	return HWT;
+
+}
 
 #endif
 
@@ -292,16 +304,21 @@ int main(int argc, char *argv[]){
 
 	int hwthread;
 	int thread_id = 0;
+	unsigned int CCD;
 
 	if ( num_devices == 0 ) {
-		#pragma omp parallel default(shared) private(hwthread, thread_id)
+		#pragma omp parallel default(shared) private(hwthread, thread_id, CCD)
 		{
 			thread_id = omp_get_thread_num();
 			hwthread = sched_getcpu();
+			CCD = HWT_to_L3domain( (unsigned int) hwthread );
 
-            printf( "MPI %03d - OMP %03d - HWT %03d - Node %s - GPU N/A\n",
-                    rank, thread_id, hwthread, name);
-
+			if (show_optimap )
+				printf( "MPI %03d - OMP %03d - HWT %03d (CCD%d) - Node %s - GPU N/A\n",
+						rank, thread_id, hwthread, CCD, name);
+			else
+				printf( "MPI %03d - OMP %03d - HWT %03d - Node %s - GPU N/A\n",
+						rank, thread_id, hwthread, name);
 		}
 	} else {
 
@@ -309,7 +326,7 @@ int main(int argc, char *argv[]){
         std::string rt_gpu_id_list = "";
 
 		// Loop over the GPUs available to each MPI rank
-		for(int i=0; i<num_devices; i++){
+		for(int i=0; i<num_devices; i++) {
 
 			// Find the physical number of the GPU from the bus ID.
 			int GCD = get_GCD( busid_array[i], busid_map );
@@ -341,9 +358,14 @@ int main(int argc, char *argv[]){
             {
 			thread_id = omp_get_thread_num();
 			hwthread = sched_getcpu();
+			CCD = HWT_to_L3domain( (unsigned int) hwthread );
 
-            printf("MPI %03d - OMP %03d - HWT %03d - Node %s - RT_GPU_ID %s - GPU_ID %s - Bus_ID %s\n",
-                    rank, thread_id, hwthread, name, rt_gpu_id_list.c_str(), gpu_id_list, busid_list.c_str());
+			if (show_optimap )
+				printf( "MPI %03d - OMP %03d - HWT %03d (CCD%d) - Node %s - RT_GPU_ID %s - GPU_ID %s - Bus_ID %s\n",
+						rank, thread_id, hwthread, CCD, name, rt_gpu_id_list.c_str(), gpu_id_list, busid_list.c_str() );
+			else
+				printf( "MPI %03d - OMP %03d - HWT %03d - Node %s - RT_GPU_ID %s - GPU_ID %s - Bus_ID %s\n",
+				        rank, thread_id, hwthread, name, rt_gpu_id_list.c_str(), gpu_id_list, busid_list.c_str() );
            }
 		}
 	}
