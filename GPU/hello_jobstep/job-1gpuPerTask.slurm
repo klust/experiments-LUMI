@@ -16,9 +16,9 @@ echo "Starting job $SLURM_JOB_ID at `date`"
 
 module load LUMI/22.12 partition/G
 
-#EXE='hello_jobstep-cce.x' ; module load cpeCray
-EXE='hello_jobstep-gcc.x' ; module load cpeGNU
-#EXE='hello_jobstep-rocm.x' ; module load cpeAMD
+EXE='./hello_jobstep-cce.x -l' ; module load cpeCray
+#EXE='./hello_jobstep-gcc.x -l' ; module load cpeGNU
+#EXE='./hello_jobstep-rocm.x -l' ; module load cpeAMD
 
 [ -f select_gpu_naive.sh ] && /bin/rm select_gpu_naive.sh
 cat - >select_gpu_naive.sh <<EOF
@@ -104,8 +104,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -122,7 +122,7 @@ env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
 echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./run_command.sh | sort"
-timeout -k 40s 20s srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+timeout -k 40s 20s srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -139,7 +139,7 @@ env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
 echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./run_command.sh | sort"
-timeout -k 40s 20s srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+timeout -k 40s 20s srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -155,8 +155,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -172,8 +172,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -189,8 +189,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -206,8 +206,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -223,8 +223,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -240,8 +240,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -257,8 +257,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -274,8 +274,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -291,8 +291,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 #
@@ -308,8 +308,8 @@ echo "OMP variables:"
 env | grep -e ^OMP_
 echo "CPU bind argument: $cpu_bind"
 echo "GPU binding: $gpu_bind"
-echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort"
-srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  ./$EXE | sort
+echo -e "\nsrun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort"
+srun -N ${SLURM_NNODES} -n ${SLURM_NTASKS} ${cpu_bind} ${gpu_bind}  $EXE | sort
 
 
 echo -e "\n... finished job $SLURM_JOB_ID at `date`"

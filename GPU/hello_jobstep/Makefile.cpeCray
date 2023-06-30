@@ -1,7 +1,8 @@
 COMP   = CC
 
 #CFLAGS = -std=c++11 -fopenmp -x hip -I/opt/rocm-5.2.3/include/hip
-CFLAGS = -std=c++11 -fopenmp -x hip
+#CFLAGS = -std=c++11 -fopenmp -x hip
+CFLAGS = -std=c++11 -fopenmp -D__HIP_PLATFORM_AMD__
 LFLAGS = -fopenmp
 EXE = hello_jobstep-cce.x
 
