@@ -21,9 +21,14 @@ Written by Tom Papatheodore
 #define EXIT_SUCCESS         0
 #define EXIT_WRONG_ARGUMENT  1
 #define EXIT_HIP_ERROR       2
+#define EXIT_SEND_ERROR      3
+#define EXIT_RECV_ERROR      4
+#define EXIT_INTERNAL_ERROR  5
 
 #if defined( BARDPEAK )
-
+//
+// Settings for the Cray EX Bardpeak GPU nodes of LUMI and similar machines
+//
 #define MAXGPUS                8
 #define SINGLE_PCIBUSID_STRLEN 13  // Full bus IDs of the form: 0000:c1:00.0
 #define LIST_PCIBUSID_STRLEN   MAXGPUS * (13 + 1) // 13: length of the items in the map below.
@@ -76,6 +81,7 @@ unsigned int HWT_to_L3domain( unsigned int HWT ) {
 }
 
 #endif
+// #endif settings for Cray EX Bardpeak nodes
 
 typedef struct {
 
@@ -93,7 +99,7 @@ do {                                                                            
     hipError_t hipErr = call;                                                                   \
     if( hipErr != hipSuccess ){                                                                 \
         printf( "HIP Error - %s:%d: '%s'\n", __FILE__, __LINE__, hipGetErrorString( hipErr ) ); \
-        exit( EXIT_HIP_ERROR );                                                                 \
+        MPI_Abort( MPI_COMM_WORLD, EXIT_HIP_ERROR );                                                                 \
     }                                                                                           \
 } while(0)
 
@@ -167,8 +173,7 @@ void print_help( const char *exe_name ) {
 	fprintf( stderr,
 			"Restrictions:\n"
 			"\n"
-			"  - This tool assumes that all nodes are of the same type.\n"
-			"  - This tool assumes that all MPI ranks have the same number of threads.\n"
+			"  - This tool currently only works for Cray EX bardpeak nodes (Trento + 4 * MI250X).\n"
 			"\n"
 		);
 
@@ -219,7 +224,7 @@ void get_args( int argc, char **argv, int mpi_myrank,
 			*unsorted_print = 1;
 		} else {
 			fprintf( stderr, "%s: Illegal flag found: %s\n", exe_name, *argv);
-			exit( EXIT_WRONG_ARGUMENT );
+			MPI_Abort( MPI_COMM_WORLD, EXIT_WRONG_ARGUMENT );
 		}
 
 		argv++;
@@ -278,9 +283,10 @@ int main(int argc, char *argv[]){
 	// Initialize OpenMP threading
 
 	int num_threads;
+	int max_num_threads;
     #pragma omp parallel shared( num_threads )   // The shared clause is not strictly needed as that variable will be shared by default.
     { if ( omp_get_thread_num() == 0 ) num_threads = omp_get_num_threads(); } // Must be in a parallel session to get the proper number.
-
+    MPI_Allreduce( &num_threads, &max_num_threads, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
 
 	//
 	// Interpret the command line arguments
@@ -346,7 +352,7 @@ int main(int argc, char *argv[]){
 	// Create a buffer to prepare the I/O (to have as much joint code for sorted and unsorted)
 	//
 
-	my_rankData_size = sizeof( t_rankData ) + num_threads * OUTPUT_LINE_LENGTH * sizeof( char );
+	my_rankData_size = sizeof( t_rankData ) + (num_threads - 1) * OUTPUT_LINE_LENGTH * sizeof( char );
     my_rankData = (t_rankData *) malloc( my_rankData_size );
     if ( my_rankData == NULL ) { fprintf( stderr, "ERROR: Memory allocation for my_rankData failed.\n" ); return 1; };
     my_rankData->p_IObuf = (char *) &(my_rankData->IObuf);
@@ -361,6 +367,8 @@ int main(int argc, char *argv[]){
 			hwthread = sched_getcpu();
 			CCD = HWT_to_L3domain( (unsigned int) hwthread );
 
+			my_rankData->p_IObuf[(thread_id+1) * OUTPUT_LINE_LENGTH-1] = '\0';
+
 			if (show_optimap )
 				sprintf( my_rankData->p_IObuf + thread_id * OUTPUT_LINE_LENGTH,
 						 "MPI %03d - OMP %03d - HWT %03d (CCD%d) - Node %s - GPU N/A",
@@ -369,6 +377,12 @@ int main(int argc, char *argv[]){
 				sprintf( my_rankData->p_IObuf + thread_id * OUTPUT_LINE_LENGTH,
 						 "MPI %03d - OMP %03d - HWT %03d - Node %s - GPU N/A",
 						 rank, thread_id, hwthread, name);
+
+			if ( my_rankData->p_IObuf[(thread_id+1) * OUTPUT_LINE_LENGTH-1] != '\0' ) {
+				fprintf( stderr, "Internal error: Increase the size of OUTPUT_LINE_LENGTH. File %s line %d.\n",
+						 __FILE__, __LINE__ );
+				MPI_Abort( MPI_COMM_WORLD, EXIT_INTERNAL_ERROR );
+			}
 		}
 	} else {
 
@@ -382,7 +396,7 @@ int main(int argc, char *argv[]){
 			int GCD = get_GCD( busid_array[i], busid_map );
 			if ( GCD < 0 ) {
 				fprintf( stderr, "Unrecognized bus ID '%s' - %s:%d\n", busid_array[i], __FILE__, __LINE__ );
-				exit(0);
+				MPI_Abort( MPI_COMM_WORLD, EXIT_INTERNAL_ERROR );
 			} // end if ( GCD < 0 )
 
 			// Concatenate per-MPIrank GPU info into strings for print
@@ -435,43 +449,75 @@ int main(int argc, char *argv[]){
 
 		int error;
 
-		t_rankData *buf_rankData;  // Buffer to receive data from another process.
-		int buf_rankData_size;
-
 		const int mssgID = 1;
 	    MPI_Request request;
 	    MPI_Status status;
 
-		// Create the buffer.
-
-		buf_rankData_size = sizeof( t_rankData ) + num_threads * OUTPUT_LINE_LENGTH * sizeof( char );
-        buf_rankData = (t_rankData *) malloc( my_rankData_size );
-        if ( buf_rankData == NULL ) { fprintf( stderr, "ERROR: Memory allocation for buf_rankData failed.\n" ); return 1; };
-        buf_rankData->p_IObuf = (char *) &(buf_rankData->IObuf);
-
         // Send the data
 
         error = MPI_Isend( my_rankData, my_rankData_size, MPI_BYTE, 0, mssgID, MPI_COMM_WORLD, &request );
+        if ( error ) {
+        	fprintf( stderr, "Error sending data from MPI rank %d. Error code %d.\n", rank, error);
+        	MPI_Abort( MPI_COMM_WORLD, EXIT_SEND_ERROR );
+        }
+#ifdef DEBUG
+        printf( "Rank %d: Sending %d bytes of data.\n", rank, my_rankData_size );
+#endif
+
+        // MPI_Barrier( MPI_COMM_WORLD ); // Looks to be safer to ensure that all Isends are out, some problems that
+                                       // we have observed may be due to that.
 
         // On rank 0: Receive the data and print.
 
         if ( rank == 0 ) {
 
+    		t_rankData *buf_rankData;  // Buffer to receive data from another process.
+    		int buf_rankData_size;
+
+    		// Create the buffer.
+
+    		buf_rankData_size = sizeof( t_rankData ) + (max_num_threads - 1) * OUTPUT_LINE_LENGTH * sizeof( char );
+            buf_rankData = (t_rankData *) malloc( buf_rankData_size );
+            if ( buf_rankData == NULL ) { fprintf( stderr, "ERROR: Memory allocation for buf_rankData failed.\n" ); return 1; };
+            buf_rankData->p_IObuf = (char *) &(buf_rankData->IObuf);
+
         	for ( int c1 = 0; c1 < size; c1++ ) { // Loop over all ranks.
 
-        		error = MPI_Recv( buf_rankData, buf_rankData_size, MPI_BYTE, c1, mssgID, MPI_COMM_WORLD, &status );
+        		error = MPI_Recv( (void *) buf_rankData, buf_rankData_size, MPI_BYTE, c1, mssgID, MPI_COMM_WORLD, &status );
+        		if ( error ) {
+        			fprintf( stderr, "Error receiving data from MPI rank %d. Error code %d.\n", c1, error);
+        			MPI_Abort( MPI_COMM_WORLD, EXIT_RECV_ERROR );
+        		}
                 buf_rankData->p_IObuf = (char *) &(buf_rankData->IObuf); // Need to redo this as it is overwritten by the communication.
+#ifdef DEBUG
+                {
+                	int count;
+                	MPI_Get_count( &status, MPI_BYTE, &count );
+                	printf( "Received %d bytes from rank %d. Error code is %d. Number of threads is %d\n", count, c1, error, buf_rankData->openmp_numthreads );
+                }
+#endif
 
-        		for ( int c2 = 0; c2 < buf_rankData->openmp_numthreads; c2++ )
+        		for ( int c2 = 0; c2 < buf_rankData->openmp_numthreads; c2++ ) {
+        			buf_rankData->p_IObuf[(c2+1)*OUTPUT_LINE_LENGTH-1] = '\0';  // To be sure that no long lines are printed, though that would already be a bug.
         			printf( "%s\n", buf_rankData->p_IObuf + c2*OUTPUT_LINE_LENGTH );
+        		}
 
         	}  // end for ( int c1 = 0; c1 < size; c1++ )
 
+        	// Free the receive buffer
+        	free( (void *) buf_rankData );
 
         }  // end if ( rank == 0 )
 
+        // Make sure all data is send before clearing the buffer.
+        MPI_Wait( &request, &status );
+
+        // Free the send buffer
+        free( (void *) my_rankData );
+
 	} // end else part if ( unsorted_print )
 
+    MPI_Barrier( MPI_COMM_WORLD );
 	MPI_Finalize();
 
 	return 0;
