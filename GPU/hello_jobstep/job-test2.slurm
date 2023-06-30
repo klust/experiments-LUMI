@@ -18,6 +18,10 @@ EXE='./hello_jobstep-cce.x' ; module load cpeCray
 #EXE='./hello_jobstep-gcc.x' ; module load cpeGNU
 #EXE='./hello_jobstep-rocm.x' ; module load cpeAMD
 
+export MPICH_GPU_SUPPORT_ENABLED=0
+export DEVICE_STACK_MEM_SIZE=2.0
+export HSA_XNACK=1
+
 export OMP_NUM_THREADS=2
 export OMP_PROC_BIND=close
 export OMP_PLACES=cores
