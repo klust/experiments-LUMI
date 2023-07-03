@@ -1,10 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=serial-test
-#SBATCH --partition=small-g
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
-#SBATCH --gpus-per-task=1
+#SBATCH --job-name=hybrid-test
+#SBATCH --partition=small
+#SBATCH --nodes=2
+#SBATCH --ntasks=32
+#SBATCH --cpus-per-task=8
 #SBATCH --hint=nomultithread
 #SBATCH --time=5:00
 #SBATCH --output %x-%j.txt
@@ -19,7 +18,7 @@ CPE_version=${CPE_version%-cpe*}
 echo -e "Running with lumi-CPEtools/${CPE_version}-cpe*-${stack_version}\n"
 
 #init-lumi-h
-module load LUMI/$stack_version partition/G
+module load LUMI/$stack_version partition/C
 
 echo "Submitted from $SLURM_SUBMIT_HOST"
 echo "Running on $SLURM_JOB_NODELIST"
@@ -28,15 +27,19 @@ env | egrep ^SLURM
 
 module list
 
-for prgenv in GNU Cray AMD
+export OMP_NUM_THREADS=8
+export OMP_PLACES=cores
+export OMP_PROC_BIND=true
+
+env | egrep ^OMP_
+
+for prgenv in GNU Cray AOCC
 do
 
     echo -e "\n\n### Testing cpe${prgenv} version\n\n"
     
     module load lumi-CPEtools/${CPE_version}-cpe${prgenv}-${stack_version}
     
-    srun serial_check -r
-    
-    module unload rocm
+    srun hybrid_check -r -w 10
     
 done

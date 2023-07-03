@@ -7,11 +7,17 @@
 #SBATCH --hint=multithread
 #SBATCH --time=5:00
 #SBATCH --output %x-%j.txt
+## The following line does not work as it seems not to pass other variables that are 
+## important to clean the environment.
+###SBATCH --export=LUMI_STACK_VERSION,EBVERSIONLUMIMINCPETOOLS
+
+echo "Read from the environment: LUMI_STACK_VERSION = ${LUMI_STACK_VERSION}, EBVERSIONLUMIMINCPETOOLS = ${EBVERSIONLUMIMINCPETOOLS}."
+stack_version=${LUMI_STACK_VERSION:-'22.12'}
+CPE_version=${EBVERSIONLUMIMINCPETOOLS:-'1.1a-cpeCray-22.12'}
+CPE_version=${CPE_version%-cpe*}
+echo -e "Running with lumi-CPEtools/${CPE_version}-cpe*-${stack_version}\n"
 
 #init-lumi-h
-stack_version='22.12'
-CPE_version='1.0'
-
 module load LUMI/$stack_version partition/C
 
 echo "Submitted from $SLURM_SUBMIT_HOST"
