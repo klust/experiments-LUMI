@@ -23,6 +23,10 @@ module load LUMI/$stack_version partition/G
 echo "Submitted from $SLURM_SUBMIT_HOST"
 echo "Running on $SLURM_JOB_NODELIST"
 
+echo
+egrep "^#SBATCH" $0
+
+echo
 env | egrep ^SLURM
 
 module list
@@ -34,7 +38,8 @@ export MPICH_GPU_SUPPORT_ENABLED=1
 for prgenv in GNU Cray AMD
 do
 
-    echo -e "\n\n### Testing cpe${prgenv} version\n\n"
+    echo -e "\n\n### Testing cpe${prgenv} version"
+    echo -e "Running 'srun --cpu-bind=${CPU_BIND} mpi_check -r' after loading the appropriate modules.\n\n"
     
     module load lumi-CPEtools/${CPE_version}-cpe${prgenv}-${stack_version}
     
