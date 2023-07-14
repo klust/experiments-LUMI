@@ -24,7 +24,7 @@ do
     echo -e "\nomp_check:\n"
     OMP_NUM_THREADS=4 omp_check -r
     
-    echo -e "\mpi_check:\n"
+    echo -e "\nmpi_check:\n"
     mpi_check -r
     
     echo -e "\nhybrid_check:\n"
