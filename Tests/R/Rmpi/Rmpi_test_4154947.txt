@@ -1,0 +1,74 @@
+
+Lmod is automatically replacing "cce/15.0.0" with "gcc/11.2.0".
+
+
+Lmod is automatically replacing "PrgEnv-cray/8.3.3" with "cpeGNU/22.12".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) cray-mpich/8.1.23
+
+[1] "Loading Rmpi...."
+[1] "Loading Rmpi...."
+[1] "Rmpi loaded."
+[1] "Want to spawn 1 processes."
+[1] "Calling mpi.spwan.Rslaves..."
+[1] "Rmpi loaded."
+[1] "Want to spawn 1 processes."
+[1] "Calling mpi.spwan.Rslaves..."
+Assertion failed in file ../src/mpid/ch4/netmod/ofi/ofi_spawn.c at line 753: 0
+Assertion failed in file ../src/mpid/ch4/netmod/ofi/ofi_spawn.c at line 753: 0
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(MPL_backtrace_show+0x26) [0x152a7a08682b]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(+0x1fedaf4) [0x152a79ac0af4]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(+0x22a3f78) [0x152a79d76f78]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(+0x2027db9) [0x152a79afadb9]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(+0x202816e) [0x152a79afb16e]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(MPI_Comm_spawn+0x1e2) [0x152a796682a2]
+/pfs/lustrep3/projappl/project_462000002/kurtlust/LUMI-user-links/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/library/Rmpi/libs/Rmpi.so(mpi_comm_spawn+0x236) [0x152a84a4a4b6]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x104900) [0x152a84637900]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(MPL_backtrace_show+0x26) [0x1488da31182b]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(+0x1fedaf4) [0x1488d9d4baf4]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(+0x22a3f78) [0x1488da001f78]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(+0x2027db9) [0x1488d9d85db9]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(+0x202816e) [0x1488d9d8616e]
+/opt/cray/pe/lib64/libmpi_gnu_91.so.12(MPI_Comm_spawn+0x1e2) [0x1488d98f32a2]
+/pfs/lustrep3/projappl/project_462000002/kurtlust/LUMI-user-links/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/library/Rmpi/libs/Rmpi.so(mpi_comm_spawn+0x236) [0x1488e4cdb4b6]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x104900) [0x1488e48c2900]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x104f56) [0x1488e48c2f56]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x142372) [0x1488e4900372]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_eval+0x150) [0x1488e4918e10]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x15c94e) [0x1488e491a94e]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_applyClosure+0x19d) [0x1488e491b79d]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x14cdc1) [0x1488e490adc1]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_eval+0x150) [0x1488e4918e10]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x15c94e) [0x1488e491a94e]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_applyClosure+0x19d) [0x1488e491b79d]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_eval+0x27c) [0x1488e4918f3c]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_ReplIteration+0x222) [0x1488e494e2c2]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x190630) [0x1488e494e630]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(run_Rmainloop+0x48) [0x1488e494e6c8]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/bin/exec/R(main+0x1b) [0x40078b]
+/lib64/libc.so.6(__libc_start_main+0xef) [0x1488e3d9429d]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/bin/exec/R(_start+0x2a) [0x4007ca]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x104f56) [0x152a84637f56]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x142372) [0x152a84675372]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_eval+0x150) [0x152a8468de10]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x15c94e) [0x152a8468f94e]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_applyClosure+0x19d) [0x152a8469079d]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x14cdc1) [0x152a8467fdc1]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_eval+0x150) [0x152a8468de10]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x15c94e) [0x152a8468f94e]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_applyClosure+0x19d) [0x152a8469079d]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_eval+0x27c) [0x152a8468df3c]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(Rf_ReplIteration+0x222) [0x152a846c32c2]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(+0x190630) [0x152a846c3630]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/lib/libR.so(run_Rmainloop+0x48) [0x152a846c36c8]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/bin/exec/R(main+0x1b) [0x40078b]
+/lib64/libc.so.6(__libc_start_main+0xef) [0x152a83b0929d]
+/users/kurtlust/LUMI-user/SW/LUMI-22.12/C/R/4.2.3-cpeGNU-22.12/lib64/R/bin/exec/R(_start+0x2a) [0x4007ca]
+MPICH ERROR [Rank 1] [job id 4154947.0] [Tue Jul 18 12:25:27 2023] [nid001028] - Abort(1): Internal error
+
+MPICH ERROR [Rank 0] [job id 4154947.0] [Tue Jul 18 12:25:27 2023] [nid001028] - Abort(1): Internal error
+
+srun: error: nid001028: tasks 0-1: Exited with exit code 1
+srun: launch/slurm: _step_signal: Terminating StepId=4154947.0
