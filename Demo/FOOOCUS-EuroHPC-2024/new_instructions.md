@@ -1,3 +1,8 @@
+###################################################################################
+#
+# PART 1: Prepare the container + module + extra packages
+#
+
 #
 # Install the PyTorch container
 #
@@ -24,7 +29,8 @@ module unload PyTorch/2.2.0-rocm-5.6.1-python-3.10-FOOOCUS-singularity-20240315
 #
 # Now we will modify the container to add additional packages using zypper.
 #
-module load PRoot # This tool will soon be included in the systools module of 23.09
+$ First we need the proot command to be available.
+module load systools
 # First create the container definition file. The easiest is by pasting these lines
 # as the shell will expand the variable expression which produces the name of the SIF
 # file.
@@ -66,7 +72,7 @@ module load PyTorch/2.2.0-rocm-5.6.1-python-3.10-FOOOCUS-singularity-20240315
 singularity shell $SIF
 
 # Now run in the container
-cd /user-software
+cd /user-software/venv
 
 cat >FOOOCUS-requirements.txt <<EOF
 torchsde==0.2.5
