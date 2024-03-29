@@ -15,9 +15,8 @@ echo -e "\n#####################################################################
 init-lumi-h
 module load LUMI/23.09
 module load wget       # Compute nodes don't have wget preinstalled. Version and toolchain don't matter in this example.
-#module load PyTorch/2.2.0-rocm-5.6.1-python-3.10-singularity-venv-20240209
 
-module load PyTorch/2.0.1-rocm-5.5.1-python-3.10-debugsymbols-singularity-20231110
+#module load PyTorch/2.0.1-rocm-5.5.1-python-3.10-debugsymbols-singularity-20231110
 #module load PyTorch/2.0.1-rocm-5.5.1-python-3.10-debugsymbols-singularity-20240207
 #module load PyTorch/2.0.1-rocm-5.5.1-python-3.10-singularity-20231110
 #module load PyTorch/2.0.1-rocm-5.5.1-python-3.10-singularity-20240207
@@ -25,6 +24,7 @@ module load PyTorch/2.0.1-rocm-5.5.1-python-3.10-debugsymbols-singularity-202311
 #module load PyTorch/2.1.0-rocm-5.6.1-python-3.10-singularity-20240207
 #module load PyTorch/2.2.0-rocm-5.6.1-python-3.10-singularity-20240208
 #module load PyTorch/2.2.0-rocm-5.6.1-python-3.10-singularity-20240209
+module load PyTorch/2.2.0-rocm-5.6.1-python-3.10-singularity-20240315
 
 # Get the files from the LUMI ReFrame repository
 wget https://raw.githubusercontent.com/Lumi-supercomputer/lumi-reframe-tests/main/checks/containers/ML_containers/src/pytorch/mnist/mnist_DDP.py
