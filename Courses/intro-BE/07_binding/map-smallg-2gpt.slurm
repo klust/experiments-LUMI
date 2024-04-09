@@ -32,4 +32,4 @@ srun --gpu-bind=none ./select_gpu_$SLURM_JOB_ID ./echo_dev_$SLURM_JOB_ID | sort
 srun --gpu-bind=none ./select_gpu_$SLURM_JOB_ID gpu_check -l
 set +x
 
-/bin/rm -f select_gpu_$SLURM_JOB_ID echo_dev_$SLURM_JOB_ID
+/bin/rm -f select_gpu_$SLURM_JOB_ID echo_dev_$SLURM_JOB_

@@ -33,7 +33,6 @@ echo "Task \$SLURM_LOCALID found ROCR_VISIBLE_DEVICES=\$ROCR_VISIBLE_DEVICES"
 export ROCR_VISIBLE_DEVICES=\$SLURM_LOCALID
 exec \$*
 EOF
-
 chmod +x ./select_1gpu_$SLURM_JOB_ID
 
 cat << EOF > select_specialgpu_$SLURM_JOB_ID
@@ -43,37 +42,48 @@ echo "Task \$SLURM_LOCALID found ROCR_VISIBLE_DEVICES=\$ROCR_VISIBLE_DEVICES"
 export ROCR_VISIBLE_DEVICES=2
 exec \$*
 EOF
-
 chmod +x ./select_specialgpu_$SLURM_JOB_ID
 
+function echo_cmd {
+    echo -e "CMD: $*\n"
+    eval $*
+}
 
-set -x
-lstopo
+echo -e "\n## Whole node topology\n"
+echo_cmd lstopo
 
-OMP_NUM_THREADS=1 gpu_check
+echo_cmd OMP_NUM_THREADS=1 gpu_check
 
-srun -n 1 -c 1 --gpus=8 gpu_check -l
+echo -e "\n##Single task single thread with all GPUs in a node.\n"
+echo_cmd srun -n 1 -c 1 --gpus=8 gpu_check -l
 
 # The next one does not work as Slurm resets ROCR_VISIBLE_DEVICES
-ROCR_VISIBLE_DEVICES="0,4" srun -n 1 -c 1 --gpus=8 ./echo_ROCR_$SLURM_JOB_ID gpu_check -l
+echo -e "\n## Show that Slurm sets ROCR_VISIBLE_DEVICES when using srun\n"
+echo_cmd ROCR_VISIBLE_DEVICES="0,4" srun -n 1 -c 1 --gpus=8 ./echo_ROCR_$SLURM_JOB_ID gpu_check -l
 
-srun -n 1 -c 1 --gpus=4 gpu_check -l
+echo -e "\n## Single task single thread with 4 GPUs requested with --gpus.\n"
+echo_cmd srun -n 1 -c 1 --gpus=4 gpu_check -l
 
-srun -n 1 -c 1 --gpus-per-task=4 gpu_check -l
+echo -e "\n## Single task single thread with 4 GPUs requested with --gpus-per-task: gpu_check, extra verification ROCR_VISIBLE_DEVICES, topo check..\n"
+echo_cmd srun -n 1 -c 1 --gpus-per-task=4 gpu_check -l
 
+set -x
 srun -n 1 -c 1 --gpus-per-task=4 bash -c 'echo $ROCR_VISIBLE_DEVICES'
+set +x
 
-srun -n 1 -c 1 --gpus-per-task=4 lstopo
+echo_cmd srun -n 1 -c 1 --gpus-per-task=4 lstopo
 
-srun -n 2 -c 1 --gpus-per-task=4 ./echo_ROCR_$SLURM_JOB_ID gpu_check -l
+echo -e "\n## Two tasks each one core and 4 GPUs with --gpus-per-task.\n"
+echo_cmd srun -n 2 -c 1 --gpus-per-task=4 ./echo_ROCR_$SLURM_JOB_ID gpu_check -l
 
-srun -n 2 -c 1 --gpus-per-task=4  ./select_specialgpu_$SLURM_JOB_ID gpu_check -l
+echo -e "\n## Two tasks each one core and 4 GPUs, then further restrict GPU to GPU 2 for each task.\n"
+echo_cmd srun -n 2 -c 1 --gpus-per-task=4  ./select_specialgpu_$SLURM_JOB_ID gpu_check -l
 
-srun -n 2 -c 1 --gpus=8 ./select_1gpu_$SLURM_JOB_ID gpu_check -l
+echo -e "\n## Two tasks, using --gpus=8, then selecting GPU based on SLURM_LOCALID. Note that both tasks see all GPUs befor select_1gpu\n"
+echo_cmd srun -n 2 -c 1 --gpus=8 ./select_1gpu_$SLURM_JOB_ID gpu_check -l
 
 #gpu_check -h
 
-set +x
 /bin/rm echo_ROCR_$SLURM_JOB_ID
 /bin/rm select_1gpu_$SLURM_JOB_ID
 /bin/rm select_specialgpu_$SLURM_JOB_ID

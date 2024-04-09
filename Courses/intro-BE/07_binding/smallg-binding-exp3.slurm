@@ -1,10 +1,10 @@
 #! /bin/bash
-#SBATCH --job-name=smallg-binding-exp1
+#SBATCH --job-name=smallg-binding-exp3
 #SBATCH --output %x-%j.txt
 #SBATCH --partition=small-g
-#SBATCH --ntasks=12
-#SBATCH --cpus-per-task=4
-#SBATCH --gpus-per-task=1
+#SBATCH --cpus-per-task=2
+#SBATCH --ntasks-per-gpu=2
+#SBATCH --gpus=12
 #SBATCH --hint=nomultithread
 #SBATCH --time=5:00
 
@@ -12,7 +12,7 @@ module load LUMI/22.12 partition/G lumi-CPEtools/1.1-cpeCray-22.12
 
 cat << EOF > select_1gpu_$SLURM_JOB_ID
 #!/bin/bash
-export ROCR_VISIBLE_DEVICES=\$SLURM_LOCALID
+export ROCR_VISIBLE_DEVICES=\$((SLURM_LOCALID/2))
 exec \$*
 EOF
 chmod +x ./select_1gpu_$SLURM_JOB_ID
@@ -51,7 +51,7 @@ done
 
 srun --gpu-bind=none gpu_check -l
 
-echo -e "##\n## Run 3: srun --gpu-bind=none ./slect_1gpu:\n##\n\n"
+echo -e "##\n## Run 3: srun --gpu-bind=none ./select_1gpu:\n##\n\n"
 
 srun --gpu-bind=none ./select_1gpu_$SLURM_JOB_ID ./task_lstopo_$SLURM_JOB_ID
 
