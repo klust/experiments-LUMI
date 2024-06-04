@@ -26,5 +26,11 @@ ml rocm/5.2.3
 ./saxpy
 ```
 
-Strangely enough it seems one must be very careful which modules to load to get correct 
-results.
+though simply
+
+```
+srun -n1 -c7 -psmall-g -t15:00 -G1 --pty ./saxpy
+```
+
+also works.
+
