@@ -1,0 +1,10 @@
+
+Lmod is automatically replacing "craype-x86-rome" with "craype-x86-trento".
+
+
+Lmod is automatically replacing "craype-accel-host" with
+"craype-accel-amd-gfx90a".
+
+
+Lmod is automatically replacing "PrgEnv-cray/8.3.3" with "cpeCray/22.12".
+
