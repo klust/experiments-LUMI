@@ -8,7 +8,7 @@
 
 # Note: We won't use a whole node but need this to have a proper binding.
 
-module load LUMI/22.12 partition/C lumi-CPEtools/1.1-cpeCray-22.12
+module load LUMI/23.09 partition/C lumi-CPEtools/1.1-cpeCray-23.09
 
 set -x
 export OMP_NUM_THREADS=4

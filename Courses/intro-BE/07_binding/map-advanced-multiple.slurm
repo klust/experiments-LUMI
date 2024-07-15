@@ -14,13 +14,14 @@ echo "SLURM_* and SRUN_* environment variables:"
 env | egrep ^SLURM
 env | egrep ^SRUN
 
-module load LUMI/22.12 partition/G lumi-CPEtools/1.1-cpeCray-22.12
+module load LUMI/23.09 partition/G lumi-CPEtools/1.1-cpeCray-23.09
 
 #
 # Define the order of the GPUs and the core mask for CCD0
 # It is important that the order of the GPUs is a string with the numbers separated by spaces.
 #
 GCD_ORDER="0 1 5 4 6 7 3 2"
+#           76543210
 coremask='2#00000010'  # Can use the binary representation, hexadecimal with 0x, or decimal
 
 #

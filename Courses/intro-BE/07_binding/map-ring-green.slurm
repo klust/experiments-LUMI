@@ -14,19 +14,19 @@ echo "SLURM_* and SRUN_* environment variables:"
 env | egrep ^SLURM
 env | egrep ^SRUN
 
-module load LUMI/22.12 partition/G lumi-CPEtools/1.1-cpeCray-22.12
+module load LUMI/23.09 partition/G lumi-CPEtools/1.1-cpeCray-23.09
 
 # Mapping:
-# | Task | GCD | CCD | cores          |
-# |-----:|----:|----:|:---------------|
-# |    0 |   0 |   6 | 48-55, 112-119 |
-# |    1 |   1 |   7 | 56-63, 120-127 |
-# |    2 |   3 |   3 | 24-32, 88-95   |
-# |    3 |   2 |   2 | 16-23, 80-87   |
-# |    4 |   4 |   0 | 0-7, 64-71     |
-# |    5 |   5 |   1 | 8-15, 72-79    |
-# |    6 |   7 |   5 | 40-47, 104-111 |
-# |    7 |   6 |   4 | 32-39, 96-103  | 
+# | Task | GCD | CCD | Available cores |
+# |-----:|----:|----:|:----------------|
+# |    0 |   0 |   6 | 49-55, 113-119  |
+# |    1 |   1 |   7 | 57-63, 121-127  |
+# |    2 |   3 |   3 | 25-32, 89-95    |
+# |    3 |   2 |   2 | 17-23, 81-87    |
+# |    4 |   4 |   0 | 1-7, 65-71      |
+# |    5 |   5 |   1 | 9-15, 73-79     |
+# |    6 |   7 |   5 | 41-47, 105-111  |
+# |    7 |   6 |   4 | 33-39, 97-103   |
 
 cat << EOF > select_gpu_$SLURM_JOB_ID
 #!/bin/bash

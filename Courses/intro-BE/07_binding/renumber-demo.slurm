@@ -6,13 +6,13 @@
 #SBATCH --hint=nomultithread
 #SBATCH --time=5:00
 
-module load LUMI/22.12 partition/C lumi-CPEtools/1.1-cpeGNU-22.12
+module load LUMI/23.09 partition/C lumi-CPEtools/1.1-cpeGNU-23.09
 
 set -x
-echo -e "\nSMP distribution on top of block."
+echo -e "\nSMP-style distribution on top of block."
 export MPICH_RANK_REORDER_METHOD=1
 srun -n 8 -c 32 -m block mpi_check -r
-echo -e "\nSMP distribution on top of cyclic."
+echo -e "\nSMP-style distribution on top of cyclic."
 export MPICH_RANK_REORDER_METHOD=1
 srun -n 8 -c 32 -m cyclic mpi_check -r
 echo -e "\nRound-robin distribution on top of block."
@@ -26,6 +26,7 @@ export MPICH_RANK_REORDER_METHOD=3
 cat >MPICH_RANK_ORDER <<EOF
 0,1,4,5,2,3,6,7
 EOF
+cat MPICH_RANK_ORDER
 srun -n 8 -c 32 -m block mpi_check -r
 /bin/rm MPICH_RANK_ORDER
 set +x

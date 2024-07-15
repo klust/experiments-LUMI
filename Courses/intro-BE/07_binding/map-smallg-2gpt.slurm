@@ -8,7 +8,7 @@
 #SBATCH --hint=nomultithread
 #SBATCH --time=5:00
 
-module load LUMI/22.12 partition/G lumi-CPEtools/1.1-cpeCray-22.12
+module load LUMI/23.09 partition/G lumi-CPEtools/1.1-cpeCray-23.09
 
 cat << EOF > select_gpu_$SLURM_JOB_ID
 #!/bin/bash

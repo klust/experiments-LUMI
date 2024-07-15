@@ -1,0 +1,3 @@
+#!/bin/bash
+printf -v task "%02d" $SLURM_PROCID
+echo "Task $task or node.local_id $SLURM_NODEID.$SLURM_LOCALID sees ROCR_VISIBLE_DEVICES=$ROCR_VISIBLE_DEVICES"
