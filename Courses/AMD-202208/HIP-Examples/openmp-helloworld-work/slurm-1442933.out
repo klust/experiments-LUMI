@@ -1,0 +1,6 @@
+Running on nid005036...
+
+
+error: 'hipErrorInvalidDevice'(101) at openmp_helloworld.cpp:60
+srun: error: nid005036: task 0: Exited with exit code 1
+srun: launch/slurm: _step_signal: Terminating StepId=1442933.0
