@@ -1,0 +1,32 @@
+INCLUDES = -I. 
+
+FC = ftn
+
+FCFLAGS = -h profile_generate  
+
+FCLINKFLAGS = -h profile_generate
+
+EXE=himeno.exe
+
+OBJS    = himeno.o
+
+all: check_env $(EXE)
+
+check_env:
+# This is a very simple check for the Cray programming einvironment
+	@if [ ${PE_ENV} != "CRAY" ] ; then echo "Please change to PrgEnv-cray"; false; fi
+
+$(EXE): $(OBJS)
+	$(FC) $(FCLINKFLAGS) $< -o $@
+
+%.o: %.f
+	$(FC) $(FCFLAGS) $(INCLUDES) -c $< -o $@	
+	
+himeno.o: param.h
+
+clean:
+	rm -rf $(EXE) $(OBJS)
+
+cleanall: clean
+	rm -rf my_output* *.rpt myrep* *.out *.lst *+pat *+apa *.ap2 *.xf
+

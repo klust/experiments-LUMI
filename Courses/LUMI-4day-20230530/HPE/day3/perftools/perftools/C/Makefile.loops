@@ -1,0 +1,34 @@
+
+INCLUDES = -I. 
+
+CC = cc
+
+CCFLAGS = -finstrument-loops
+
+CCLINKFLAGS = -finstrument-loops
+
+EXE=himeno.exe
+
+OBJS    = himeno.o
+
+all: check_env $(EXE)
+
+check_env:
+# This is a very simple check for the Cray programming einvironment
+	@if [ ${PE_ENV} != "CRAY" ] ; then echo "Please change to PrgEnv-cray"; false; fi
+
+$(EXE): $(OBJS)
+	$(CC) $(CCLINKFLAGS) $< -o $@
+
+%.o: %.c
+	$(CC) $(CCFLAGS) $(INCLUDES) -c $< -o $@	
+	
+himeno.o: param.h
+
+clean:
+	rm -rf $(EXE) $(OBJS)
+
+cleanall: clean
+	rm -rf my_output* *.rpt myrep* *.out *.lst *+pat *+apa *.ap2 *.xf
+
+	

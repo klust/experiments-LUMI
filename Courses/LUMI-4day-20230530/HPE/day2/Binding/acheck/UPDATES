@@ -1,0 +1,9 @@
+v1.32 fixed off-by one issue in cpu range
+      Version string now a devine at top of code
+v1.40 Fixed cpu list bug when -numa activated
+      Added a NUMA column active with -numa to show how cpus span NUMA regions
+      New header pinnning changed to count and made this variable width
+      General fixes to output alignment edge cases
+v1.50 Added -gpu option to show information on GPUs
+v1.51 Makefile and man page
+

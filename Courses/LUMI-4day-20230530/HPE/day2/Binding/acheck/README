@@ -1,0 +1,19 @@
+Example application for demoonstrating launching and placement.
+See included documentation for more information.
+
+Quick build:
+
+make
+
+Quick run 
+
+ sbatch run-acheck.slurm
+
+You may need to adapt the script for custom system details like
+account and schedule queue/partition information.
+
+If you have access to this due to a workshop or course then
+you should have been provided with PDF notes either separately
+or in this directory.
+
+

@@ -1,0 +1,112 @@
+.TH acheck 1 "February 2023" Linux "Tools"
+.\"
+.SH NAME
+acheck \- MPI and OpenMP Affinity Checker
+.SH SYNOPSIS
+.B acheck
+[
+.B \-h
+]
+[
+.B \-v
+]
+[
+.B \-byrank
+]
+[
+.B \-amask
+]
+[
+.B \-nmask
+]
+[
+.B \-numa
+]
+[
+.B \-split_mask
+]
+[
+.B \-on_cpu
+]
+[
+.B \-tid
+]
+[
+.B \-gpu
+]
+[
+.B \-label
+]
+.\"
+.SH OPTIONS
+.\"
+.IP -h
+produce usage information and exit
+.IP -v
+Print detailed rank mapping and binding information, without 
+this option only basic 
+information is provided on the number and distribution of any
+processes and threads
+.IP -byrank
+order binding information by rank rather than by host
+.IP -numa
+add a column on NUMA regions used and encode NUMA mapping in ASCII binding map
+.IP -amask
+toggle display of ASCII-encoded binding mask
+.IP -nmask
+enable display of numeric binding mask
+.IP -split_mask 
+Split the mask into two - useful for systems with hyperthreading
+.IP -oncpu
+Toggle display of 'oncpu' column showing where the current thread is actually running
+.IP -tid
+Shows the thread id (what this means depends on how the source was built,
+not relevant for normal usage)
+.IP -gpu
+Enables detection of available GPUs
+.IP -label
+display a label for each process
+.\"
+.SH DESCRIPTION
+.\"
+This program prints out useful information on the distribution
+of processes in an MPI application showing how processes
+are distributed across nodes.
+.P
+It also provides information on OpenMP threading and details
+on how threads are bound to cpus on each host.
+.P
+Some of the fields need to be enabled and can be switched when the program is built. For example the map of cpus that any thread is bound to can be displayed as numeric values or ranges or as a string mask where "." means no binding to the cpu in that position (numbered 0 to maximum cpu from left to right) and a "1" shows the thread is bound to that CPU. If the NUMA mode is selected (-numa) then instead of a 1 then the ascii charcters 0,1,2... are used to denote which NUMA region the cpu is bound into.  Also when the -numa option is in effect then an extra column is displayed to show which NUMA regious contain cpus that the thread is bound to.
+.P
+If GPU information is requested (and compiled in) then additional information is output. An indication is given of which environment variables are set (for example ROCR_VISIBLE_DEVICES or HIP_VISIBLE_DEVICES). The value of 
+.B 
+one
+of these environemnt variables will be shown for each proecess along with information on which pci busid and NUMA domain mapped to each GPU detected in turn from HIP API calls.  Note that if more than one of the *_VISIBLE_DEVICES environment variables was set then the values of only one of them is displayed, it would be best to carefully consider the effect of this.
+.P
+Acheck can also be used to debug MPMD launches when the
+.I -label 
+flag is used, a label can be defined (per process)
+from the environment variable ACHECK_LABEL
+or from argv[0].  The latter feature can be used by using
+symbolic links to 
+.B acheck
+in order to test an MPMD launch that would have used different
+binaries.
+.P
+Note that various options are toggles, this is because acheck
+can be build with various defaults to tailor it to individual
+site preferences.
+.\"
+.SH NOTES
+.\"
+This is a work in progress and is not
+production code and as such has limited error handling and
+known inefficiencies at scale.  This tool is not supported by Cray or HPE.
+.\"
+.SH AUTHORS
+.\"
+Harvey Richardson, Hewlett Packard Enterprise
+.\" I lost all my templates for manpages from 20 yeards ago
+.\" This is done from scratch
+
+
