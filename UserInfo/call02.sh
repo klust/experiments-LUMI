@@ -1,0 +1,2 @@
+#! /bin/bash
+lumi-allocations --lust -p project_465000231,project_465000314,project_465000318,project_465000315,project_465000317,project_465000232,project_465000323,project_465000316,project_465000328,project_465000062,project_465000330,project_465000332
