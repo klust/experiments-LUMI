@@ -1,0 +1,4 @@
+#!/bin/bash
+export ROCR_VISIBLE_DEVICES="$(($SLURM_LOCALID*2)),$(($SLURM_LOCALID*2+1))"
+#echo "select_gpu_naive: LocalID $SLURM_LOCALID: ROCR_VISIBLE_DEVICES=$ROCR_VISIBLE_DEVICES"
+exec $*
