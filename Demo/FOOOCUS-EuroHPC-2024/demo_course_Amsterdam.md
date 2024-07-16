@@ -74,7 +74,7 @@ zypper -n install -y Mesa libglvnd libgthread-2_0-0 hostname
 
 EOF
 
-# Now set some environment variables to give singularity faster working spce.
+# Now set some environment variables to give singularity faster working space.
 # These settings only work for the login nodes of LUMI, not for the compute nodes.
 export SINGULARITY_CACHEDIR=$XDG_RUNTIME_DIR/singularity/cache
 export SINGULARITY_TMPDIR=$XDG_RUNTIME_DIR/singularity/tmp
@@ -108,7 +108,7 @@ singularity shell $SIF
 pip install -r requirements_versions.txt
 
 #
-# Now we can finish the contaner and SquashFS overlay.
+# Now we can finish the container and SquashFS overlay.
 # Unfortunately we cannot add FOOOCUS itself to the container.
 #
 # Exit the container
