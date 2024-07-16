@@ -1,0 +1,111 @@
+#!/bin/bash -l
+#
+#PBS -A lp_ua_vsc
+#PBS -l walltime=2:59:59
+#PBS -l nodes=1:ppn=24:haswell
+#PBS -N benchmark_blaslibs_thinking_haswell
+#PBS -m bae -M kurt.lust@uantwerpen.be
+#
+# We've seen strange results with OpenBLAS when using all available cores on
+# a node. This may be due to OS jitter. The purpose of this test is to see
+# if this is an isolated problem in Antwerp or does also occur on other
+# VSC clusters.
+
+cd $PBS_O_WORKDIR
+
+maxcores=24
+sizes=(2500 2505 2510 10000 10005 10010)
+outfile=benchmark_openblas_thinking_haswell-${PBS_JOBID}.csv
+
+cores1=$(($maxcores-1))
+cores2=$maxcores
+
+# Put data about the cluster in the result file.
+echo "hostname:," `hostname`                                                >$outfile
+
+#
+# Load the modules
+#
+# These modules load Intel/2015a, gcc 4.9.2 and OpenBLAS 0.2.15
+#
+module load thinking/2015a
+module load intel/2015a
+export MKLROOT=$MKLROOT/mkl
+module load OpenBLAS/0.2.15-GCC-4.9.2-LAPACK-3.5.0
+module load binutils/2.25-GCC-4.9.2
+make clean
+
+#
+# First test: GNU Fortran with OpenBLAS
+#
+
+# Build the executable
+make mmb_gnu_obl_mc
+
+# Work around a problem with GPFS on some compute nodes.
+sleep 10
+
+# First run sometimes produces strange results, so do a dummy run.
+./mmb_gnu_obl_mc.exe ${sizes[0]} $maxcores
+
+# Benchmark run
+echo -e "\n\"Benchmark runs OpenBLAS\"\n"                                   >>$outfile
+for size in ${sizes[@]}; do
+  ./mmb_gnu_obl_mc.exe $size 1 1 1 1 1 \
+                             $cores1 \
+                             $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 \
+                             $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 \
+                             $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 \
+                             $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 \
+                             $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 \
+                             $cores2 \
+                             $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 \
+                             $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 \
+                             $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 \
+                             $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 \
+                             $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 \
+                             | grep "CSV" | sed -e 's/CSV //'               >>$outfile
+done
+
+
+
+
+#
+# Second test: Intel Fortran with MKL
+#
+
+# Build the executable
+make mmb_intel_mc
+
+# Work around a problem with GPFS on some compute nodes.
+sleep 10
+
+# First run sometimes produces strange results, so do a dummy run.
+./mmb_intel_mc.exe ${sizes[0]} $maxcores 
+
+# Benchmark run
+echo -e "\n\"Benchmark runs Intel MKL\"\n"                                 >>$outfile
+for size in ${sizes[@]}; do
+  ./mmb_intel_mc.exe   $size 1 1 1 1 1 \
+                             $cores1 \
+                             $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 \
+                             $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 \
+                             $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 \
+                             $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 \
+                             $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 $cores1 \
+                             $cores2 \
+                             $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 \
+                             $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 \
+                             $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 \
+                             $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 \
+                             $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 $cores2 \
+                             | grep "CSV" | sed -e 's/CSV //'              >>$outfile
+done
+
+
+
+
+#
+# Runs ended.
+#
+echo -e "\nCompleted"                                                      >>$outfile

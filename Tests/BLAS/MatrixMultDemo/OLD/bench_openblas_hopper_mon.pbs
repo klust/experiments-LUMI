@@ -1,0 +1,35 @@
+#!/bin/bash -l
+#
+#PBS -l walltime=5:59:59
+#PBS -l nodes=1:ppn=20
+#PBS -N benchmark_openblas
+#
+# We've seen strange results with OpenBLAS when using all available cores on
+# a node. This may be due to OS jitter. The purpose of this test is to see
+# if this is an isolated problem in Antwerp or does also occur on other
+# VSC clusters.
+
+
+cd $PBS_O_WORKDIR
+
+cores=20
+size=2500
+times=500
+outfile=benchmark_openblas_hopper_2.csv
+
+# Build the executable
+module load foss/2015b
+make mmb_gnu_obl_sc
+
+# Work around a problem with GPFS on some compute nodes.
+sleep 10
+
+hostname                                         >$outfile
+
+# Benchmark run
+echo -e "\n\"Benchmark runs\"\n"                >>$outfile
+for (( i=1; i <= $times; i++ )); do
+  ./mmb_gnu_obl_sc.exe $size $cores | grep "! " >>$outfile
+done
+
+echo -e "\nCompleted"                           >>$outfile
