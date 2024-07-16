@@ -6,11 +6,11 @@ lower_bound = int(sys.argv[1])
 upper_bound = int(sys.argv[2])
 
 for index in range(lower_bound,upper_bound+1):
-	s_i = str(index)
-	with open('unbound'+ s_i +'.slurm','w') as myfile:
+	s_i = '{:05d}'.format(index)
+	with open('unhealthy2_unbound'+ s_i +'.slurm','w') as myfile:
 		myfile.write( '''#!/usr/bin/env bash
 
-#SBATCH --job-name=unbound_sim''' + s_i  + '''
+#SBATCH --job-name=unhealthy2_unbound_sim''' + s_i  + '''
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
@@ -20,7 +20,10 @@ for index in range(lower_bound,upper_bound+1):
 #SBATCH --open-mode=append
 #SBATCH --output=%x-%j.out
 #SBATCH --account=project_462000008
+###SBATCH --partition=small
 #SBATCH --partition=standard
+#SBATCH --reservation=juhaj_checknode_testing
+#SBATCH --nodelist=nid001390,nid001391
 
 project=462000008
 
@@ -28,9 +31,9 @@ module purge --force
 module load init-lumi
 export EBU_USER_PREFIX=/users/kurtlust/LUMI-user-appl
 
-module load LUMI/21.12 partition/C
+module load LUMI/22.08 partition/C
 #module load GROMACS/2020.4-cpeGNU-21.12-PLUMED-2.6.4-CPU
-module load GROMACS/2021.4-cpeGNU-21.12-PLUMED-2.7.4-CPU
+module load GROMACS/2021.4-cpeCray-22.08-PLUMED-2.7.4-noPython-CPU
 
 export SCRATCH=/scratch/project_${project}/kurtlust/Olivier
 mkdir -p $SCRATCH
@@ -38,7 +41,7 @@ mkdir -p $SCRATCH
 #Make LAUCHDIR the path to  directory where process was submitted
 export LAUNCHDIR="${PWD}"
 #Make the path to the folder in scratch
-RUNDIR=$SCRATCH/unbound_sim'''+s_i+'''
+RUNDIR=$SCRATCH/unhealthy2_unbound_sim'''+s_i+'''
 
 export GMX_MAXBACKUP='-1'
 

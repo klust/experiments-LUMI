@@ -20,7 +20,9 @@ for index in range(lower_bound,upper_bound+1):
 #SBATCH --open-mode=append
 #SBATCH --output=%x-%j.out
 #SBATCH --account=project_462000008
-#SBATCH --partition=standard
+###SBATCH --partition=small
+###SBATCH --partition=standard
+#SBATCH --reservation=juhaj_checknode_testing
 
 project=462000008
 
@@ -28,9 +30,9 @@ module purge --force
 module load init-lumi
 export EBU_USER_PREFIX=/users/kurtlust/LUMI-user-appl
 
-module load LUMI/21.12 partition/C
+module load LUMI/22.08 partition/C
 #module load GROMACS/2020.4-cpeGNU-21.12-PLUMED-2.6.4-CPU
-module load GROMACS/2021.4-cpeGNU-21.12-PLUMED-2.7.4-CPU
+module load GROMACS/2021.4-cpeCray-22.08-PLUMED-2.7.4-noPython-CPU
 
 export SCRATCH=/scratch/project_${project}/kurtlust/Olivier
 mkdir -p $SCRATCH

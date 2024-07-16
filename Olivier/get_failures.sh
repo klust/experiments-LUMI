@@ -20,5 +20,7 @@ do
     		nodes=$(awk '/Node failure/ {print $6}' $myfile)
     		echo "    -   Node failure error message found for node(s) " $nodes
     	fi
+        sacct -j $jobnumber --format JobID%13,JobName%20,AllocCPUS,State%15,ExitCode,Start,End
+        echo -e "\n===================================================================================\n"
     fi
 done

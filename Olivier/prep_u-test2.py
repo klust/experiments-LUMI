@@ -47,7 +47,7 @@ cd $LAUNCHDIR
 echo -e '\n\n####################\n##\n## Initialisation\n##\n'
 
 srun -N 1 -n 1 -c 1 gmx_mpi_d grompp -f unbound.mdp -c unbound.gro -t unbound.cpt -n unbound.ndx -p unbound.top -o $RUNDIR/unbound_sim.tpr
-/usr/bin/cp -f $RUNDIR/bound_sim.tpr $RUNDIR/bound_sim.tpr.bak
+/usr/bin/cp -f $RUNDIR/unbound_sim.tpr $RUNDIR/unbound_sim.tpr.bak
 
 echo -e '\n\n####################\n##\n## Model run\n##\n'
 
