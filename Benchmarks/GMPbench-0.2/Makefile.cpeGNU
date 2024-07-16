@@ -1,0 +1,21 @@
+CC=cc
+CFLAGS=-O3 -fomit-frame-pointer
+CLIBS=-L$(EBRROTGMP)/lib -lgmp -lm
+
+all : gexpr gmpver gcd gcdext multiply divide rsa pi
+
+% : %.c
+	$(CC) $(CFLAGS) $(CLIBS) $< -o $@
+
+gexpr : gexpr.c
+gmpver : gmpver.c
+gcd : gcd.c
+gcdext : gcdext.c
+multiply : multiply.c
+divide : divide.c
+rsa : rsa.c
+pi : pi.c
+
+clean :
+	-/bin/rm gexpr gmpver gcd gcdext multiply divide rsa pi
+    
