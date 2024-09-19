@@ -3,3 +3,4 @@
 *.so
 *.x
 *.exe
+.project*
