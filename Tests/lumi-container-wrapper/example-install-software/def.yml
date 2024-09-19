@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - eumetsat
+dependencies:
+  - fftw
+  - gxx
