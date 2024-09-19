@@ -25,3 +25,15 @@
 -   `foreach-*`: Examples of shared and distributed memory parallelism with the foreach
     package and various providers.
 
+
+## Benchmarks to test the installation
+
+-   `benchmarks/R-benchmark`: Benchmark developed by [Philippe Grosjean (UMons)](https://www.sciviews.org/)
+    that can currently be found on the 
+    ["R benchmarks" page on the R for macOS site](https://mac.r-project.org/benchmarks/).
+    
+-   `benchmarks/JanDeLeeuw`: Benchmark script from Jan de Leeuw found on the 
+    ["R benchmarks" page on the R for macOS site](https://mac.r-project.org/benchmarks/).
+    
+-    `benchmarks/CrowdSourced`: Scripts based on the 
+    ["Crowd sourced benchmarks" page at CRAN](https://cran.r-project.org/web/packages/benchmarkme/vignettes/a_introduction.html).
