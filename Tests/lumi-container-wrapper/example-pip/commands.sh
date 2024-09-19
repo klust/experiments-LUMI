@@ -1,5 +1,0 @@
-module load LUMI/24.03
-module load lumi-container-wrapper
-
-mkdir INSTALL
-pip-containerize new --prefix INSTALL requirements.txt
