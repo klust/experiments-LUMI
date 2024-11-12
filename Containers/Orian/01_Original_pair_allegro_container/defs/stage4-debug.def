@@ -1,0 +1,133 @@
+Bootstrap: localimage
+From: stage3.sif
+
+%post
+
+PYTHON_VERSION=3.10
+NEQUIP_COMMIT=bffd533c60a05ff61b4cf9a5b0af8e8d940b66d5
+ALLEGRO_COMMIT=22f673c565d148ae8e9394443baa9f5b5716c8e7
+LAMMPS_VERSION=stable_2Aug2023_update2
+PAIR_ALLEGRO_COMMIT=ae07ae51b990817f8f864065705f8bc5944c8f56
+
+LAMMPS_INSTALL_DIR=/opt/lammps
+
+mkdir -p $LAMMPS_INSTALL_DIR
+
+source /.init-module-build.sh
+
+module load CrayEnv
+module load PrgEnv-gnu craype-network-none buildtools
+module load libfabric
+module load pytorch
+
+module rm cray-libsci
+
+export PYTHONPATH="$LAMMPS_INSTALL_DIR/lib/python$PYTHON_VERSION/site-packages:$PYTHONPATH"
+export PYTHONPATH="$LAMMPS_INSTALL_DIR/lib64/python$PYTHON_VERSION/site-packages:$PYTHONPATH"
+
+curl -LO https://github.com/mir-group/nequip/archive/$NEQUIP_COMMIT.tar.gz
+tar xf $NEQUIP_COMMIT.tar.gz
+cd nequip-$NEQUIP_COMMIT
+#sed -i 's/"torch>=1.10.0,<1.13,!=1.9.0",/"torch>=1.13.0",/g' setup.py
+CC=cc CXX=CC pip install --no-build-isolation --prefix $LAMMPS_INSTALL_DIR .
+cd ../ && rm -rf $NEQUIP_COMMIT.tar.gz nequip-$NEQUIP_COMMIT
+
+curl -LO https://github.com/mir-group/allegro/archive/$ALLEGRO_COMMIT.tar.gz
+tar xf $ALLEGRO_COMMIT.tar.gz
+cd allegro-$ALLEGRO_COMMIT
+CC=cc CXX=CC pip install --no-build-isolation --prefix $LAMMPS_INSTALL_DIR .
+cd ../ && rm -rf $ALLEGRO_COMMIT.tar.gz allegro-$ALLEGRO_COMMIT
+
+module load craype-network-ofi
+
+curl -LO https://download.pytorch.org/libtorch/rocm5.2/libtorch-cxx11-abi-shared-with-deps-1.13.1%2Brocm5.2.zip
+unzip libtorch-cxx11-abi-shared-with-deps-1.13.1%2Brocm5.2.zip
+
+pushd libtorch/lib
+
+for libwithhash in $(ls *-*.so*); do 
+  for lib in *.so; do 
+    patchelf --replace-needed $libwithhash $(s=$libwithhash; echo ${s%-*}.so${s#*.so*}) $lib
+  done
+done
+
+mv libmagma-68015a33.so libmagma.so
+mv libgomp-b6de5f8b.so.1 libgomp.so.1
+
+rm -rf *-*.so*
+
+filetocopy=(libtorch.so libtorch_cpu.so libc10.so libc10_hip.so libtorch_hip.so
+libmagma.so libgomp.so.1 libcaffe2_nvrtc.so)
+
+mkdir -p $LAMMPS_INSTALL_DIR/libtorch
+
+for lib in ${filetocopy[@]}; do 
+  cp $lib $LAMMPS_INSTALL_DIR/libtorch/$lib
+done
+
+popd
+
+sed -i 's/hip::hipfft;//' /libtorch/share/cmake/Caffe2/Caffe2Targets.cmake
+
+curl -LO https://github.com/lammps/lammps/archive/refs/tags/stable_2Aug2023_update2.tar.gz
+tar xf stable_2Aug2023_update2.tar.gz
+
+curl -LO https://github.com/mir-group/pair_allegro/archive/$PAIR_ALLEGRO_COMMIT.tar.gz
+tar xf $PAIR_ALLEGRO_COMMIT.tar.gz
+
+cd pair_allegro-$PAIR_ALLEGRO_COMMIT
+./patch_lammps.sh ../lammps-stable_2Aug2023_update2/
+
+cd ../lammps-stable_2Aug2023_update2/
+
+mkdir build && cd build
+
+export HIPCC_COMPILE_FLAGS_APPEND="-std=c++17 -g -isystem ${CRAY_MPICH_PREFIX}/include --gcc-toolchain=/opt/cray/pe/gcc/11.2.0/snos"
+export HIPCC_LINK_FLAGS_APPEND="-g -L${CRAY_MPICH_PREFIX}/lib -lmpi ${PE_MPICH_GTL_DIR_amd_gfx90a} ${PE_MPICH_GTL_LIBS_amd_gfx90a} --gcc-toolchain=/opt/cray/pe/gcc/11.2.0/snos"
+
+export CMAKE_PREFIX_PATH=/libtorch/share/cmake:$ROCM_PATH/lib/cmake
+
+cmake ../cmake \
+  -D CMAKE_BUILD_TYPE=Debug \
+  -D CMAKE_INSTALL_PREFIX=$LAMMPS_INSTALL_DIR \
+  -D CMAKE_BUILD_TYPE=Release \
+  -D CMAKE_CXX_COMPILER=hipcc \
+  -D PKG_KOKKOS=ON \
+  -D BUILD_MPI=ON \
+  -D BUILD_OMP=OFF \
+  -D Kokkos_ARCH_ZEN3=ON \
+  -D Kokkos_ARCH_VEGA90A=ON \
+  -D Kokkos_ENABLE_SERIAL=ON \
+  -D Kokkos_ENABLE_HIP=ON \
+  -D HIP_PATH=/opt/rocm \
+  -D CMAKE_INSTALL_RPATH='$ORIGIN/../libtorch' \
+  -D MKL_INCLUDE_DIR=/opt/pytorch/include
+
+grep -rl "std=c++14" . | xargs sed -i 's/-std=c++14//g'
+
+nice make install -j128
+
+cd / 
+
+rm -rf libtorch lammps-stable_2Aug2023_update2 stable_2Aug2023_update2.tar.gz
+rm -rf pair_allegro-$PAIR_ALLEGRO_COMMIT $PAIR_ALLEGRO_COMMIT.tar.gz
+rm -rf libtorch-cxx11-abi-shared-with-deps-1.13.1%2Brocm5.2.zip target.lst
+
+mkdir -p /opt/container_modules/lammps-pair-allegro/
+
+cat >/opt/container_modules/lammps-pair-allegro/stable_2Aug2023_update2.lua <<EOF1
+local root="$LAMMPS_INSTALL_DIR"
+
+if not isloaded("pytorch") then
+  load("pytorch")
+end
+
+prepend_path("PATH", pathJoin(root, "bin"))
+
+prepend_path("LD_LIBRARY_PATH", pathJoin(root, "lib"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(root, "lib64"))
+
+prepend_path("PYTHONPATH", pathJoin(root, "lib/python$PYTHON_VERSION/site-packages"))
+prepend_path("PYTHONPATH", pathJoin(root, "lib64/python$PYTHON_VERSION/site-packages"))
+
+EOF1

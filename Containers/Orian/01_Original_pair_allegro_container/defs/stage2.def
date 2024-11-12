@@ -1,0 +1,82 @@
+Bootstrap: localimage
+From: stage1.sif
+
+%post
+
+zypper -n addrepo http://download.opensuse.org/distribution/leap/15.4/repo/oss/ oss
+zypper -n install lua53 lua53-luafilesystem lua53-luaposix lua53-luaterm tcl hostname \
+                  libjansson4 zlib-devel numactl awk patch nano vim git which libatomic1 \
+                  libjson-c3 tar gzip bzip2 binutils unzip libstdc++6-12.3.0+git1204 \
+                  libgfortran5-12.3.0+git1204                  
+
+cat >/etc/ld.so.conf.d/cray-pe.conf <<EOF1
+/opt/cray/pe/lib64
+/opt/cray/pe/lib64/cce
+EOF1
+
+cat > /etc/ld.so.conf.d/cray-xpmem.conf <<EOF2
+/opt/cray/xpmem/default/lib64
+EOF2
+
+touch /etc/bash.bashrc.local
+touch /usr/lib64/pkgconfig/cray-xpmem.pc
+touch /usr/lib64/libcxi.so.1.5.0
+touch /usr/lib64/libcxi.so.1
+
+ldconfig
+
+cat > /.container.bashrc <<EOF3
+#!/bin/sh
+
+for file in /opt/container.d/*; do
+  . \$file
+done
+EOF3
+
+mkdir -p /opt/container.d
+mkdir -p /opt/container_modules
+
+cat > /opt/container.d/10_lmod_init.sh << EOF4
+#!/bin/sh
+
+if [ -f /opt/cray/pe/lmod/lmod/libexec/lmod ]; then
+  if [ -f /etc/bash.bashrc.local ]; then
+    unset MODULEPATH
+    unset PELOCAL_PRGENV
+
+    __loadedmodules_old="${LOADEDMODULES}"
+
+    source /etc/bash.bashrc.local
+    module --no_redirect --force purge
+    module --initial_load --no_redirect restore
+    
+    module use /opt/container_modules
+  fi
+fi
+
+EOF4
+
+cat > /.init-module-build.sh <<EOF5
+#!/bin/bash
+
+mv /usr/bin/id /usr/bin/id.bak  
+function id { echo "container"; }
+
+source /.container.bashrc
+
+unset -f id
+mv /usr/bin/id.bak /usr/bin/id
+
+EOF5
+
+%environment
+
+if [ ! -z $LUMI_ALLOW_USERSITE ]; then
+  export PYTHONNOUSERSITE=1
+fi
+
+action=`basename $0`
+if [ "$action" = "shell" ]; then
+  export SINGULARITY_SHELL=/bin/bash 
+  set -- "--rcfile" "/.container.bashrc"
+fi

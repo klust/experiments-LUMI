@@ -1,0 +1,214 @@
+Bootstrap: docker
+From: opensuse/leap:15.5
+
+%post
+
+echo quit | openssl s_client -showcerts -servername "packages.local" \
+  -connect packages.local:443 > /usr/share/pki/trust/anchors/packages.pem
+/usr/sbin/update-ca-certificates
+
+for f in /usr/sbin/groupadd /usr/sbin/useradd /usr/bin/chgrp /usr/bin/chown /usr/bin/chkstat; do
+  mv $f $f.bak
+  ln -s /bin/true $f
+done
+
+zypper -n --no-gpg-checks addrepo https://download.opensuse.org/distribution/leap/15.5/repo/oss/ oss
+zypper -n --no-gpg-checks addrepo https://download.opensuse.org/repositories/devel:/languages:/perl/15.5/ perl
+zypper -n --no-gpg-checks addrepo https://download.opensuse.org/repositories/Education/15.5/ edu
+zypper -n --no-gpg-checks addrepo https://download.opensuse.org/repositories/editors/15.5/ editor
+
+zypper -n addrepo https://packages.local/repository/cos-base-3.0.1-2-sle-15.5 cos-base-3.0.1-2-sle-15.5
+zypper -n addrepo https://packages.local/repository/cpe cpe
+zypper -n addrepo https://packages.local/repository/csm-embedded csm-embedded
+zypper -n addrepo https://packages.local/repository/csm-noos csm-noos
+zypper -n addrepo https://packages.local/repository/csm-sle-\${releasever_major}sp\${releasever_minor} csm-sle
+#zypper -n addrepo https://packages.local/repository/rocm-6.0.3 rocm-6.0.3
+zypper -n addrepo https://packages.local/repository/slingshot-host-software-2.1-cos-3.0-x86_64-sle15-sp5-cn-cassini slingshot-host-software-2.1-cos-3.0-x86_64-sle15-sp5-cn-cassini
+zypper -n addrepo https://packages.local/repository/slurm-2.0.9-23.2.7-sle-15.5 slurm-2.0.9-23.2.7-sle-15.5
+zypper -n addrepo https://packages.local/repository/sma-sle-15sp5 sma-sle-15sp5
+zypper -n addrepo https://packages.local/repository/uss-1.0.1-8-cos-base-3.0/ uss-1.0.1-8-cos-base-3.0
+zypper -n addrepo https://packages.local/repository/uss-1.0.1-8-csm-1.5 uss-1.0.1-8-csm-1.5
+zypper -n addrepo https://packages.local/repository/csc-rpms/sle15 csc-packages
+
+sed -i 's#gpgcheck=1#gpgcheck=0#g' /etc/zypp/repos.d/*.repo
+
+zypper -n --no-gpg-checks refresh
+
+mkdir -p /pfs; echo /pfs >> /etc/container-bind-dirs.list
+mkdir -p /appl; echo /appl >> /etc/container-bind-dirs.list
+mkdir -p /project; echo /project >> /etc/container-bind-dirs.list
+mkdir -p /flash; echo /flash >> /etc/container-bind-dirs.list
+mkdir -p /users; echo /users >> /etc/container-bind-dirs.list
+mkdir -p /projappl; echo /projappl >> /etc/container-bind-dirs.list
+mkdir -p /scratch; echo /scratch >> /etc/container-bind-dirs.list
+mkdir -p /opt/AMD; echo /opt/AMD >> /etc/container-bind-dirs.list
+mkdir -p /opt/cray; echo /opt/cray >> /etc/container-bind-dirs.list
+mkdir -p /opt/modulefiles; echo /opt/modulefiles >> /etc/container-bind-dirs.list
+mkdir -p /etc/cray; echo /etc/cray >> /etc/container-bind-dirs.list
+mkdir -p /etc/cray-pe.d; echo /etc/cray-pe.d >> /etc/container-bind-dirs.list
+mkdir -p /etc/alternatives/cray-xpmem; echo /etc/alternatives/cray-xpmem >> /etc/container-bind-dirs.list
+
+mkdir -p /usr/lib64/pkgconfig
+touch /usr/lib64/pkgconfig/cray-xpmem.pc
+echo /usr/lib64/pkgconfig/cray-xpmem.pc >> /etc/container-bind-files.list
+
+touch /usr/lib64/libcxi.so
+touch /usr/lib64/libcxi.so.1
+touch /usr/lib64/libcxi.so.1.5.0
+
+echo /usr/lib64/libcxi.so >> /etc/container-bind-files.list
+echo /usr/lib64/libcxi.so.1 >> /etc/container-bind-files.list
+echo /usr/lib64/libcxi.so.1.5.0 >> /etc/container-bind-files.list
+
+zypper -n --no-gpg-checks --no-refresh install --no-recommends --oldpackage \
+  bash-completion \
+  cmake-full \
+  cpp12-12.3.0+git1204 \
+  cpp13-13.2.1+git7813 \
+  cpp7-7.5.0+r278197 \
+  curl \
+  emacs \
+  gcc12-12.3.0+git1204 \
+  gcc12-c++-12.3.0+git1204 \
+  gcc13-13.2.1+git7813 \
+  gcc13-c++-13.2.1+git7813 \
+  gcc7-7.5.0+r278197 \
+  gcc7-c++-7.5.0+r278197 \
+  git \
+  glibc-2.31 \
+  hostname-3.16 \
+  krb5-1.20.1 \
+  libatomic1-13.2.1+git7813 \
+  libbrotlicommon1-1.0.7 \
+  libbrotlidec1-1.0.7 \
+  libcom_err2-1.46.4 \
+  libcurl4-8.0.1 \
+  libgcc_s1-13.2.1+git7813 \
+  libgfortran4-7.5.0+r278197 \
+  libgfortran5-13.2.1+git7813 \
+  libgomp1-13.2.1+git7813 \
+  libidn2-0-2.2.0 \
+  libjansson4-2.14 \
+  libjitterentropy3-3.4.0 \
+  libjson-c3-0.13 \
+  libkeyutils1-1.6.3 \
+  libldap-2_4-2-2.4.46 \
+  libnghttp2-14-1.40.0 \
+  libnl3-200-3.3.0 \
+  libopenssl1_1-1.1.1l \
+  libpcre1-8.45 \
+  libpsl5-0.20.1 \
+  libsasl2-3-2.1.28 \
+  libselinux1-3.1 \
+  libssh4-0.9.8 \
+  libstdc++6-13.2.1+git7813 \
+  libstdc++6-devel-gcc13-13.2.1+git7813 \
+  libunistring2-0.9.10 \
+  libyaml-0-2-0.1.7 \
+  libz1-1.2.13 \
+  libzstd1-1.5.0 \
+  lua53-5.3.6 \
+  lua53-luafilesystem-1.8.0 \
+  lua53-luaposix-34.1.1 \
+  nano \
+  tcl-8.6.12 \
+  vim \
+  wget
+
+mkdir -p $(dirname "/etc/container.bashrc")
+cat > "/etc/container.bashrc" <<EOF42e21e26
+  #!/bin/bash
+
+  # Safegard: do not init if CrayPE and software stack are not binded
+  if [[ ! -d /appl/lumi/modules || ! -d /opt/cray/pe/lmod ]]; then
+    return 0
+  fi
+
+  if test -z "\${CONTAINER_INIT_DONE:-}"; then
+
+    unset MODULEPATH
+
+    unset -f module
+    unset -f ml
+
+    for prefix in LMOD __LMOD _ModuleTable CRAY PE LUMI EBROOT EBVERSION EBDEVEL; do
+      for var in \$(env | grep ^\$prefix | cut -d '=' -f1) ; do
+        unset "\$var"
+      done
+    done
+
+    mod_paths="/opt/cray/pe/lmod/modulefiles/core                   \\
+               /opt/cray/pe/lmod/modulefiles/craype-targets/default \\
+               /appl/lumi/modules/SoftwareStack                     \\
+               /appl/lumi/modules/StyleModifiers                    \\
+               /appl/lumi/modules/init-LUMI-SoftwareStack           \\
+               /appl-container/mgmt/modules                         \\
+               /opt/cray/modulefiles"
+
+    . /opt/cray/pe/lmod/lmod/init/bash
+
+    MODULEPATH=\$(echo \${mod_paths} | sed "s_  *_:_g")
+
+    export MODULEPATH
+
+    init_module_list="craype-x86-rome    \\
+                      craype-network-ofi \\
+                      perftools-base     \\
+                      xpmem              \\
+                      PrgEnv-cray        \\
+                      init-lumi"
+
+    LMOD_SYSTEM_DEFAULT_MODULES=\$(echo \${init_module_list} | sed "s_  *_:_g")
+    export LMOD_SYSTEM_DEFAULT_MODULES
+
+    LMOD_PACKAGE_PATH=/appl/lumi/LUMI-SoftwareStack/LMOD
+    LMOD_RC=/appl/lumi/LUMI-SoftwareStack/LMOD/lmodrc.lua
+    LMOD_ADMIN_FILE=/appl/lumi/LUMI-SoftwareStack/LMOD/admin.list
+    LMOD_AVAIL_STYLE='label:<PEhierarchy>:system'
+
+    export LMOD_PACKAGE_PATH LMOD_RC LMOD_ADMIN_FILE LMOD_AVAIL_STYLE
+
+    module --initial_load --no_redirect restore
+
+    export CONTAINER_INIT_DONE=1
+  fi
+
+  if [[ -d /etc/container-init.d && -n "\$(ls -A /etc/container-init.d)" ]]; then
+    for file in /etc/container-init.d/*; do
+      . \$file
+    done
+  fi
+EOF42e21e26
+
+mkdir -p $(dirname "/etc/ld.so.conf.d/cray-pe.conf")
+cat > "/etc/ld.so.conf.d/cray-pe.conf" <<EOF42e21e26
+/opt/cray/pe/lib64
+/opt/cray/pe/lib64/cce
+EOF42e21e26
+
+mkdir -p $(dirname "/etc/ld.so.conf.d/cray-xpmem.conf")
+cat > "/etc/ld.so.conf.d/cray-xpmem.conf" <<EOF42e21e26
+/opt/cray/xpmem/default/lib64
+EOF42e21e26
+
+%environment
+
+action="${0##*/}"
+file="/etc/container.bashrc"
+
+case "${action}" in
+shell)
+  if [ "${SINGULARITY_SHELL:-}" = "/bin/bash" ]; then
+    set -- --noprofile --rcfile $file
+  elif test -z "${SINGULARITY_SHELL:-}"; then
+    export SINGULARITY_SHELL=/bin/bash
+    set -- --noprofile --rcfile $file
+  fi
+;;
+exec)
+  export BASH_ENV="$file"
+  set -- /bin/bash --noprofile --norc -c "exec $(/usr/bin/printf " %q" "$@")"
+;;
+run)
+  set -- /bin/bash --noprofile --rcfile $file
+esac

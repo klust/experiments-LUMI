@@ -1,0 +1,5 @@
+/opt/cray
+/opt/AMD
+/etc/cray
+/etc/cray-pe.d
+/etc/alternatives/cray-xpmem

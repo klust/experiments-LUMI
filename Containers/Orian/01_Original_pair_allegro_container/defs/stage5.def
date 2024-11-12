@@ -1,0 +1,196 @@
+Bootstrap: localimage
+From: stage4.sif
+
+%post
+
+rm -d /opt/cray
+rm -d /opt/AMD
+rm -d /opt/modulefiles
+rm -d /etc/cray
+rm -d /etc/cray-pe.d
+rm -d /pfs
+rm -d /scratch
+rm -d /projappl
+rm -d /project
+rm -d /flash
+rm -d /appl
+
+rm /etc/bash.bashrc.local
+rm /usr/lib64/pkgconfig/cray-xpmem.pc
+rm /usr/lib64/libcxi.so.1.5.0
+rm /usr/lib64/libcxi.so.1
+rm /version.conf
+
+cat > /opt/container.d/20_init_user_environment.sh << EOF1
+#!/bin/sh
+
+module load lammps-pair-allegro
+
+EOF1
+
+cat > /opt/container.d/30_setup_miopen_cache.sh << EOF2
+#!/bin/sh
+
+if [[ $HOSTNAME = nid* ]]; then
+  export MIOPEN_USER_DB_PATH="/tmp/$(whoami)-miopen-cache-$SLURM_NODEID"
+  export MIOPEN_CUSTOM_CACHE_DIR=$MIOPEN_USER_DB_PATH
+
+  if [ $SLURM_LOCALID -eq 0 ] ; then
+    rm -rf $MIOPEN_USER_DB_PATH
+    mkdir -p $MIOPEN_USER_DB_PATH
+  fi
+fi
+
+EOF2
+
+%help
+
+ This container provides the following packages:
+
+  - LAMMPS (Large-scale Atomic/Molecular Massively Parallel Simulator)
+  - pair_allgro (LAMMPS pair style for Allegro)
+  - Allegro (E(3)-equivariant machine-learning interatomic potential)
+  - NequIP (equivariant interatomic potentials)
+  - ASE (Atomic Simulation Environment)
+
+  Please consult the help for the individual packages for more
+  information on how to run them:
+
+   - LAMMPS    singularity run-help --app lammps $SIF
+   - NequIP    singularity run-help --app nequip $SIF
+   - ASE       singularity run-help --app ase $SIF
+
+ In addition, you can use the Python or pip executable from the container
+ using python or pip apps. See the help for more information:
+
+   - Python    singularity run-help --app python $SIF
+   - pip       singularity run-help --app pip $SIF
+
+#-----------------------------------------------------------------------------#
+# Python app                                                                  #
+#-----------------------------------------------------------------------------#
+
+%apprun python
+
+exec python "$@"
+
+%apphelp python
+
+ Run the Python installed in the container. The general syntax is:
+
+   $ singularity run --app python $SIF PYTHON-ARGS
+ 
+
+%appenv python
+
+source /.container.bashrc &> /dev/null
+
+#-----------------------------------------------------------------------------#
+# pip app                                                                     #
+#-----------------------------------------------------------------------------#
+
+%apprun pip
+
+exec pip "$@"
+
+%apphelp pip
+
+ Run the pip installed in the container. The general syntax is:
+
+   $ singularity run --app pip $SIF PIP-ARGS
+ 
+
+%appenv pip
+
+source /.container.bashrc &> /dev/null
+
+#-----------------------------------------------------------------------------#
+# LAMMPS app                                                                  #
+#-----------------------------------------------------------------------------#
+
+%apprun lammps
+
+exec lmp "$@"
+
+%apphelp lammps
+
+ Run the LAMMPS executable. The general syntax is:
+
+   $ singularity run --app lammps $SIF LAMMPS-ARGS
+ 
+
+%appenv lammps
+
+source /.container.bashrc &> /dev/null
+
+#-----------------------------------------------------------------------------#
+# NequIP app                                                                  #
+#-----------------------------------------------------------------------------#
+
+%apprun nequip
+
+argv=( "$@" )
+argc=${#argv[@]}
+
+valid_variants=( benchmark evaluate deploy train )
+
+if [[ $argc -lt 1 ]]; then
+  echo "Please provide an nequip variant."
+  echo "Valid variants are: ${valid_variants[@]}"
+  exit 1
+fi
+
+variant="${argv[0]}"
+
+found_valid=no
+for valid in ${valid_variants[@]}; do
+  if [[ "$variant" == "$valid" ]]; then
+    found_valid=yes; break
+  fi
+done
+
+if [[ $found_valid == yes ]]; then
+  exec nequip-$variant "${argv[@]:1}"
+else
+  echo "No valid nequip variant provided."
+  echo "Valid variants are: ${valid_variants[@]}"
+fi
+
+%apphelp nequip
+
+ Run one of the NequIP executable. The first argument is the executable
+ to run. For example to run nequip-train, run the following command:
+
+   $ singularity run --app nequip $SIF train NEQUIP-TRAIN-ARGS
+
+ The general syntax is:
+
+   $ singularity run --app nequip $SIF benchmark|evaluate|deploy|train NEQUIP-ARGS
+ 
+
+%appenv nequip
+
+source /.container.bashrc &> /dev/null
+
+#-----------------------------------------------------------------------------#
+# ASE app                                                                     #
+#-----------------------------------------------------------------------------#
+
+%apprun ase
+
+exec ase "$@"
+
+%apphelp ase
+
+ Run the ASE command line tool. The general syntax is:
+
+   $ singularity run --app ase $SIF ASE-SUBCOMMAND ASE-ARGS
+ 
+
+%appenv ase
+
+source /.container.bashrc &> /dev/null
+
+#-----------------------------------------------------------------------------#
+# End of apps definitions                                                     #
+#-----------------------------------------------------------------------------#

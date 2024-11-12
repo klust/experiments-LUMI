@@ -1,0 +1,13 @@
+Bootstrap: docker
+From: opensuse/leap:15.4
+
+%post
+  LUMI_DIRS="/pfs /appl /project /flash /users /projappl /scratch /opt/AMD /opt/modulefiles"
+  LUMI_DIRS="$LUMI_DIRS /etc/cray /etc/cray-pe.d /etc/ld.so.conf.d /usr/lib64/pkgconfig"
+  LUMI_DIRS="$LUMI_DIRS /etc/alternatives/cray-xpmem /opt/cray"
+
+  for dir in $LUMI_DIRS; do
+    mkdir -p $dir
+  done
+
+  touch /version.conf

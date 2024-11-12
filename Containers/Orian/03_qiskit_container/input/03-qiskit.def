@@ -1,0 +1,105 @@
+Bootstrap: localimage
+From: /pfs/lustrep1/projappl/project_462000008/olouant/qiskit-container/output/02-rocm.sif
+
+%post
+
+zypper -n --no-gpg-checks install -y gmp-devel
+
+module load CrayEnv
+module load buildtools
+module load PrgEnv-cray
+
+export CC=cc
+export CXX=CC
+export FC=ftn
+
+pip --no-cache-dir install "pybind11[global]" wheel cython  --no-build-isolation
+
+
+%appinstall symengine
+
+tmpdir=$(mktemp -d)
+
+pushd $tmpdir
+git clone -b v0.11.0 --depth 1 https://github.com/symengine/symengine.git
+cd symengine
+mkdir build && cd build
+cmake .. && make -j && make install
+popd && rm -rf $tmpdir
+
+%applabels symengine
+
+VERSION       0.11.0
+VERSION_SHORT 0.11
+VERSION_MAJOR 0
+VERSION_MINOR 11
+VERSION_PATCH 0
+
+%apphelp symengine
+
+SymEngine is a fast symbolic manipulation library, written in C++
+
+
+%appinstall symengine.py
+
+tmpdir=$(mktemp -d)
+
+pushd $tmpdir
+git clone -b v0.11.0 --depth 1 https://github.com/symengine/symengine.py.git
+cd symengine.py
+sed -i 's/-DSYMENGINE_INSTALL_PY_FILES=OFF/-DSYMENGINE_INSTALL_PY_FILES=ON/' setup.py
+python setup.py install
+popd && rm -rf $tmpdir
+
+%applabels symengine.py
+
+VERSION       0.11.0
+VERSION_SHORT 0.11
+VERSION_MAJOR 0
+VERSION_MINOR 11
+VERSION_PATCH 0
+
+%apphelp symengine.py
+
+Python wrappers for SymEngine
+
+
+%appinstall qiskit-aer
+
+tmpdir=$(mktemp -d)
+
+pushd $tmpdir
+git clone -b stable/0.15 --depth=1 https://github.com/Qiskit/qiskit-aer
+cd qiskit-aer/
+
+pip --no-cache-dir install -r requirements-dev.txt
+
+module load craype-accel-amd-gfx90a
+
+QISKIT_AER_PACKAGE_NAME='qiskit-aer-gpu-rocm' \
+  python3 ./setup.py bdist_wheel -- \
+    -D AER_THRUST_BACKEND=ROCM \
+    -D AER_MPI=ON \
+    -D AER_ROCM_ARCH='gfx90a' \
+    -D BLAS_LIBRARIES="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_cray.a" \
+    -D LAPACK_LIBRARIES="${CRAY_LIBSCI_PREFIX_DIR}/lib/libsci_cray.a"
+
+pip --no-cache-dir install --no-deps --force-reinstall dist/qiskit_aer_gpu_rocm-*.whl --no-build-isolation
+popd && rm -rf $tmpdir
+
+patchelf --add-needed 'libmpi_cray.so.12' /usr/local/lib64/python3.11/site-packages/qiskit_aer/backends/controller_wrappers.cpython-311-x86_64-linux-gnu.so
+# Very dirty trick, do not reproduce at home
+patchelf --add-needed 'libmpi_gtl_hsa.so.0' $(realpath /usr/bin/python)
+# well... reproduce if you want, if it works, it ain't stupid :)
+
+%applabels qiskit-aer
+
+VERSION       0.15.0
+VERSION_SHORT 0.15
+VERSION_MAJOR 0
+VERSION_MINOR 15
+VERSION_PATCH 0
+
+%apphelp qiskit-aer
+
+Aer is a high performance simulator for quantum circuits that includes noise models

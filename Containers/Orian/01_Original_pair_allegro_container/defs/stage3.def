@@ -1,0 +1,150 @@
+Bootstrap: localimage
+From: stage2.sif
+
+%post
+
+source /version.conf
+
+PYTORCH_INSTALL_DIR=/opt/pytorch
+LAMMPS_INSTALL_DIR=/opt/lammps
+AWSOFIPLUGIN_INSTALL_DIR=/opt/ofi-plugin
+
+# Install ROCm
+zypper -n addrepo https://download.opensuse.org/repositories/devel:/languages:/perl/15.5/devel:languages:perl.repo
+zypper --no-gpg-checks -n install $ROCM_RPM
+sed -i 's#gpgcheck=1#gpgcheck=0#g' /etc/zypp/repos.d/*.repo
+amdgpu-install -y --no-dkms --usecase=hiplibsdk,rocm --rocmrelease=$ROCM_RELEASE
+zypper --no-gpg-checks -n install -y --force miopenkernels-gfx90a-110kdb
+
+export ROCM_PATH=/opt/rocm-$ROCM_RELEASE
+
+echo "gfx90a" > $ROCM_PATH/target.lst
+
+# Install Python
+pyver=$(echo "$PYTHON_VERSION" | tr -d ".")
+zypper -n install python$pyver python$pyver-pip
+update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYTHON_VERSION 1
+update-alternatives --install /usr/bin/pip3 pip3 /usr/bin/pip$PYTHON_VERSION 1
+update-alternatives --install /usr/bin/python python /usr/bin/python$PYTHON_VERSION 1
+update-alternatives --install /usr/bin/pip pip /usr/bin/pip$PYTHON_VERSION 1
+
+zypper -n clean
+
+mkdir -p $PYTORCH_INSTALL_DIR
+mkdir -p $AWSOFIPLUGIN_INSTALL_DIR
+
+# Install Pytorch
+export PYTHONPATH=$PYTORCH_INSTALL_DIR/lib64/python$PYTHON_VERSION/site-packages
+export PYTHONPATH=$PYTORCH_INSTALL_DIR/lib/python$PYTHON_VERSION/site-packages:$PYTHONPATH
+
+mkdir -p $PYTORCH_INSTALL_DIR
+pip install torch==$PYTORCH_VERSION \
+            --extra-index-url https://download.pytorch.org/whl/rocm5.2 \
+            --no-cache-dir \
+            --prefix $PYTORCH_INSTALL_DIR
+
+pip install wandb==$WANDB_VERSION mkl-include==$MKL_INCLUDE_VERSION \
+             --no-cache-dir \
+             --prefix $PYTORCH_INSTALL_DIR
+
+filetorm=(librocsparse.so libroctracer64.so libroctx64.so rocblas librocsolver.so 
+librocfft-device-3.so librocfft.so librocm_smi64.so librocrand.so librocfft-device-2.so 
+librocfft-device-1.so librocfft-device-0.so librocblas.so librccl.so libamd_comgr.so 
+libamdhip64.so libhipblas.so libhipfft.so libhiprand.so libhipsparse.so libhsa-runtime64.so 
+libMIOpen.so)
+
+cd $PYTORCH_INSTALL_DIR/lib64/python$PYTHON_VERSION/site-packages/torch/lib
+rm -rf ${filetorm[@]}
+
+cd /
+
+source /.init-module-build.sh
+
+module load CrayEnv
+module load PrgEnv-gnu craype-network-none buildtools
+module load libfabric
+module rm cray-libsci
+
+git clone -b cxi https://github.com/ROCmSoftwarePlatform/aws-ofi-rccl
+cd aws-ofi-rccl
+./autogen.sh
+./configure CC=cc \
+            --prefix=$AWSOFIPLUGIN_INSTALL_DIR \
+            --with-libfabric=$(pkg-config --variable=prefix libfabric) \
+            --enable-trace \
+            --with-hip=$ROCM_PATH \
+            --with-rccl=$ROCM_PATH/rccl \
+            --disable-tests
+nice make -j
+make install
+
+cd /
+
+rm -rf /aws-ofi-rccl
+
+mkdir -p /opt/container_modules/aws-ofi-plugin
+mkdir -p /opt/container_modules/pytorch
+mkdir -p /opt/container_modules/rocm
+
+cat >/opt/container_modules/rocm/5.2.3-container.lua <<EOF1
+local root="$ROCM_PATH"
+
+setenv("ROCM_PATH", root)
+setenv("ROCM_TARGET_LST", pathJoin(root, "target.lst"))
+
+prepend_path("PATH", pathJoin(root, "bin"))
+
+prepend_path("CPATH", pathJoin(root, "include"))
+
+prepend_path("LD_LIBRARY_PATH", pathJoin(root, "lib"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(root, "lib64"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(root, "llvm/lib"))
+
+prepend_path("LIBRARY_PATH", pathJoin(root, "lib"))
+prepend_path("LIBRARY_PATH", pathJoin(root, "lib64"))
+prepend_path("LIBRARY_PATH", pathJoin(root, "llvm/lib"))
+
+EOF1
+
+cat >/opt/container_modules/aws-ofi-plugin/default.lua <<EOF2
+local root="$AWSOFIPLUGIN_INSTALL_DIR"
+
+if not isloaded("rocm/$ROCM_RELEASE-container") then
+  load("rocm/$ROCM_RELEASE-container")
+end
+
+if not isloaded("libfabric") then
+  load("libfabric")
+end
+
+prepend_path("LD_LIBRARY_PATH", pathJoin(root, "lib"))
+
+EOF2
+
+cat >/opt/container_modules/pytorch/$PYTORCH_VERSION_SHORT.lua <<EOF3
+local root="$PYTORCH_INSTALL_DIR"
+
+if not isloaded("aws-ofi-plugin") then
+  load("aws-ofi-plugin")
+end
+
+if not isloaded("rocm/$ROCM_RELEASE-container") then
+  load("rocm/$ROCM_RELEASE-container")
+end
+
+setenv("PYTORCH_ROCM_ARCH", "gfx90a")
+
+prepend_path("PATH", pathJoin(root, "bin"))
+
+prepend_path("CPATH", pathJoin(root, "include"))
+
+prepend_path("LD_LIBRARY_PATH", pathJoin(root, "lib"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(root, "lib64"))
+
+prepend_path("LIBRARY_PATH", pathJoin(root, "lib"))
+prepend_path("LIBRARY_PATH", pathJoin(root, "lib64"))
+
+prepend_path("PYTHONPATH", pathJoin(root, "lib/python$PYTHON_VERSION/site-packages"))
+prepend_path("PYTHONPATH", pathJoin(root, "lib64/python$PYTHON_VERSION/site-packages"))
+
+EOF3
