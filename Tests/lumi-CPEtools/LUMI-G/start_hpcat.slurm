@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=hybrid_gpu_check-test
+#SBATCH --job-name=hpcat-test
 #SBATCH --partition=standard-g
-#SBATCH --nodes=1
+#SBATCH --nodes=2
 #SBATCH --gpus-per-node=8
 #SBATCH --hint=nomultithread
 #SBATCH --time=15:00
@@ -51,17 +51,12 @@ do
     #ls $EBROOTLUMIMINCPETOOLS/bin
     
     cpu_bind="--cpu-bind=mask_cpu:0xfefe,0xfefe0000,0xfefe00000000,0xfefe000000000000"
-	#gpu_bind="--gpu-bind=mask_gpu:0x30,0x0c,0xc0,0x03"
 	gpu_bind="--gpu-bind=mask_gpu:0x03,0x0c,0x30,0xc0"
+	
+	export MPICH_OFI_NIC_POLICY=NUMA
 	
 	echo "CPU bind argument: $cpu_bind"
 	echo "GPU binding: $gpu_bind"
-	
-	echo -e "\nsrun -N ${SLURM_NNODES} -n $((4*SLURM_NNODES)) ${cpu_bind} ${gpu_bind} hybrid_check -r"
-	timeout -k 10s 20s srun -N ${SLURM_NNODES} -n $((4*SLURM_NNODES)) ${cpu_bind} ${gpu_bind} hybrid_check -r
-	
-	echo -e "\nsrun -N ${SLURM_NNODES} -n $((4*SLURM_NNODES)) ${cpu_bind} ${gpu_bind} gpu_check -l"
-	timeout -k 10s 20s srun -N ${SLURM_NNODES} -n $((4*SLURM_NNODES)) ${cpu_bind} ${gpu_bind} gpu_check -l
 	
 	echo -e "\nsrun -N ${SLURM_NNODES} -n $((4*SLURM_NNODES)) ${cpu_bind} ${gpu_bind} hpcat"
 	timeout -k 10s 20s srun -N ${SLURM_NNODES} -n $((4*SLURM_NNODES)) ${cpu_bind} ${gpu_bind} hpcat
