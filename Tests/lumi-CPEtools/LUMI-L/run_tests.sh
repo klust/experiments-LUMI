@@ -4,8 +4,8 @@
 #
 
 echo "Read from the environment: LUMI_STACK_VERSION = ${LUMI_STACK_VERSION}, EBVERSIONLUMIMINCPETOOLS = ${EBVERSIONLUMIMINCPETOOLS}."
-stack_version=${LUMI_STACK_VERSION:-'22.12'}
-CPE_version=${EBVERSIONLUMIMINCPETOOLS:-'1.1-cpeCray-22.12'}
+stack_version=${LUMI_STACK_VERSION:-'24.03'}
+CPE_version=${EBVERSIONLUMIMINCPETOOLS:-'1.1-cpeCray-24.03'}
 CPE_version=${CPE_version%-cpe*}
 echo -e "Running with lumi-CPEtools/${CPE_version}-cpe*-${stack_version}\n"
 

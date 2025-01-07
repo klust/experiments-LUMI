@@ -9,8 +9,8 @@
 #SBATCH --output %x-%j.txt
 
 #init-lumi-h
-stack_version='22.12'
-CPE_version='1.0'
+stack_version='24.03'
+CPE_version='1.2'
 
 module load LUMI/$stack_version partition/G
 

@@ -10,8 +10,8 @@
 #SBATCH --error=bip_%j.err
 
 #init-lumi-h
-ml LUMI/22.08
-ml lumi-CPEtools/1.0-cpeGNU-22.08
+ml LUMI/24.03
+ml lumi-CPEtools/1.2-cpeGNU-24.03
 
 echo "Submitted from $SLURM_SUBMIT_HOST"
 echo "Running on $SLURM_JOB_NODELIST"

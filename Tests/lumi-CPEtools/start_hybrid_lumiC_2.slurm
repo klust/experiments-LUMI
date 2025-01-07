@@ -14,8 +14,8 @@
 
 
 #init-lumi-h
-ml LUMI/22.12 partition/C
-ml lumi-CPEtools/1.0-cpeGNU-22.12
+ml LUMI/24.03 partition/C
+ml lumi-CPEtools/1.2-cpeGNU-24.03
 
 echo "Submitted from $SLURM_SUBMIT_HOST"
 echo "Running on $SLURM_JOB_NODELIST"
