@@ -2,7 +2,7 @@
 #
 # This test script should be submitted with sbatch from within a CPE 24.11 container.
 # It shows very strange behaviour as the `module load` of some modules fails to show
-# those in `moudlule list` and also fails to change variables that should be changed.
+# those in `module list` and also fails to change variables that should be changed.
 #
 #SBATCH -J example3
 #SBATCH -p small
@@ -39,7 +39,7 @@ then
     
     export SIF="$save_SIF"
     export SIFCCPE="$save_SIFCCPE"
-    export SINBULARITY_BIND="$save_BIND"
+    export SINGULARITY_BIND="$save_BIND"
     
     echo -e "\n\`\`\`\n" 
     
@@ -47,7 +47,7 @@ then
     echo -e "-   Environment variable \`SINGULARITY_BIND\`: \`${SINGULARITY_BIND}\`.\n"
     echo -e "-   Environment variable \`SIF\`: \`${SIF}\`.\n"
     echo -e "-   Environment variable \`SIFCCPE\`: \`${SIFCCPE}\`.\n"
-    echo -e "-   Environment variable \`CRAY_CC_VERSION\`: \`${CRAY_CC_VERSION}\`.\n"
+    echo -e "-   Environment variable \`CRAY_CC_VERSION\`: \`${CRAY_CC_VERSION}\`. The issue here is that this variable was set inside the container, and outside the container a proper unload is not possible.\n"
     
     exec singularity exec "$SIFCCPE" "$0" "$@"
     
@@ -69,11 +69,17 @@ echo -e "\n\n# Body of the job script\n"
 echo -e "Detected version of the module tool (should be the container one): \n\`\`\`\n$(module --version 2>&1)\n\`\`\`\n"
 echo -e "List of modules currently loaded (should be the container ones):\n\n\`\`\`\n$(module list 2>&1)\n\`\`\`\n"
 echo -e "Environment variable CRAY_CC_VERSION: \`${CRAY_CC_VERSION}\`.\n"
-echo -e "Now executing a 'module purge':\n\n\`\`\`\n$(module purge 2>&1)\n\`\`\`\n"
+echo -e "Now executing a 'module purge':\n\n\`\`\`\n"
+module purge 2>&1
+echo -e "\n\`\`\`\n"
 echo -e "\n\nEnvironment variable CRAY_CC_VERSION: \`${CRAY_CC_VERSION}\`.\n"
-echo -e "Now executing 'module load cce':\n\n\`\`\`\n$(module load cce 2>&1)\n\`\`\`\n"
+echo -e "Now executing 'module load cce':\n\n\`\`\`\n"
+module load cce 2>&1
+echo -e "\n\`\`\`\n"
 echo -e "And listing the modules with 'module list':\n\n\`\`\`\n$(module list 2>&1)\n\`\`\`\`\n"
 echo -e "\n\nEnvironment variable CRAY_CC_VERSION: ${CRAY_CC_VERSION}\`.\n"
-echo -e "Now executing a 'module purge' again:\n\n\`\`\`\n $(module purge 2>&1)\n\`\`\`\n"
+echo -e "Now executing a 'module purge' again:\n\n\`\`\`\n"
+module purge 2>&1
+echo -e "\n\`\`\`\n"
 echo -e "\n\nEnvironment variable CRAY_CC_VERSION: \`${CRAY_CC_VERSION}\`.\n"
 echo -e "But check if we still now the path to the container via the SIFCCPE environment variable:\n\`${SIFCCPE}\`"
