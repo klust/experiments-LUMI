@@ -5,7 +5,7 @@
 #SBATCH --time=2:00
 #SBATCH --output=%x-%j.txt
 
-module load LUMI/23.09 partition/C lumi-CPEtools/1.1-cpeCray-23.09
+module load LUMI/24.03 partition/C lumi-CPEtools/1.2-cpeCray-24.03
 
 echo "Submitted from $SLURM_SUBMIT_HOST"
 echo "Running on $SLURM_JOB_NODELIST"

@@ -6,7 +6,7 @@
 #SBATCH --hint=nomultithread
 #SBATCH --time=5:00
 
-module load LUMI/23.09 partition/C lumi-CPEtools/1.1-cpeGNU-23.09
+module load LUMI/24.03 partition/C lumi-CPEtools/1.2-cpeGNU-24.03
 
 set -x
 echo -e "\nSMP-style distribution on top of block."

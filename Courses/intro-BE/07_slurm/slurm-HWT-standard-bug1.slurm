@@ -6,7 +6,7 @@
 #SBATCH --output=%x-%j.txt
 #SBATCH --hint=nomultithread
 
-module load LUMI/22.12 partition/C lumi-CPEtools/1.1-cpeGNU-22.12
+module load LUMI/24.03 partition/C lumi-CPEtools/1.2-cpeGNU-24.03
 
 echo "Submitted from $SLURM_SUBMIT_HOST"
 echo "Running on $SLURM_JOB_NODELIST"
