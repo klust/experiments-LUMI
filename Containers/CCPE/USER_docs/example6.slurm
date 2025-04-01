@@ -20,7 +20,7 @@
 # Ensure that we can find the container. This might not be the case if this job script
 # is launched from outside the container with the ccpe module not loaded.
 #
-if [ -z "${SWITCHTOCLEANCCPE}" ]
+if [ -z "${SWITCHTOCCPE}" ]
 then
     module load CrayEnv ccpe/24.11-LUMI || exit
 fi
@@ -31,7 +31,7 @@ then echo "Entering the script to enter the container from the system"
 else echo "Entering the script to enter the container from the container" 
 fi
 
-eval $SWITCHTOCLEANCCPE
+eval $SWITCHTOCCPE
 
 echo -e "\nAfter cleanup:\n  - SIF: $SIF\n  - SIFCCPE: $SIFCCPE\n  - SINGULARITY_BIND: $SINGULARITY_BIND\n  - EXPORTCCPE: $EXPORTCCPE\n  - INTICCPE: $INITCCPE\n"
 echo -e "Checking if INITCCPE did its job:\n  - BASH_ENV: $BASH_ENV\n  - MODULEPATH: $MODULEPATH\n  - LMOD_SYSTEM_DEFAULT_MODULES: $LMOD_SYSTEM_DEFAULT_MODULES\n  - mod_paths: $mod_paths\n"
