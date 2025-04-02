@@ -42,7 +42,7 @@ then
 
         for var in ${EXPORTCCPE//,/ } ;
         do
-            eval $(declare -p $var | sed -e "s/$var/save_$var/")
+            eval save_$var="'${!var}'" ;
         done ;
 
         module --force purge ;
@@ -53,7 +53,7 @@ then
         for var in ${save_EXPORTCCPE//,/ } ;
         do
             varname="save_$var" ;
-            eval $(declare -p $varname | sed -e "s/save_$var/$var/")
+            eval export $var="'${!varname}'" ;
             unset $varname ;
         done ;
 
@@ -61,9 +61,7 @@ then
 
     exec singularity exec "$SIFCCPE" "$0" "$@" ;
 
-fi ;
-
-if [ "$CCPE_VERSION" != "24.11" ] ;
+elif [ "$CCPE_VERSION" != "24.11" ] ;
 then
 
     lmod_dir="/opt/cray/pe/lmod/lmod" ;

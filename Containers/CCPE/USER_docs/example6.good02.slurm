@@ -61,9 +61,7 @@ then
 
     exec singularity exec "$SIFCCPE" "$0" "$@" ;
 
-fi ;
-
-if [ "$CCPE_VERSION" != "24.11" ] ;
+elif [ "$CCPE_VERSION" != "24.11" ] ;
 then
 
     lmod_dir="/opt/cray/pe/lmod/lmod" ;

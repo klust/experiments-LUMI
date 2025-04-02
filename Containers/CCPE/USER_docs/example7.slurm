@@ -4,7 +4,7 @@
 # It shows very strange behaviour as the `module load` of some modules fails to show
 # those in `module list` and also fails to change variables that should be changed.
 #
-#SBATCH -J example6
+#SBATCH -J example7
 #SBATCH -p small
 #SBATCH -n 2
 #SBATCH -c 1
@@ -32,71 +32,10 @@ then echo "Entering the script to enter the container from the system"
 else echo "Entering the script to enter the container from the container" 
 fi
 
-#eval $SWITCHTOCCPE
-
-if [ ! -d "/.singularity.d" ] ;
-then
-
-    if [ "$CCPE_VERSION" != "24.11" ] ;
-    then
-
-        for var in ${EXPORTCCPE//,/ } ;
-        do
-            eval $(declare -p $var | sed -e "s/$var/save_$var/")
-        done ;
-
-        module --force purge ;
-        eval $($LMOD_DIR/clearLMOD_cmd --shell bash --full --quiet) ;
-        unset LUMI_INIT_FIRST_LOAD ;
-        unset PROFILEREAD ;
-
-        for var in ${save_EXPORTCCPE//,/ } ;
-        do
-            varname="save_$var" ;
-            eval $(declare -p $varname | sed -e "s/save_$var/$var/")
-            unset $varname ;
-        done ;
-
-    fi ;
-
-    exec singularity exec "$SIFCCPE" "$0" "$@" ;
-
-fi ;
-
-if [ "$CCPE_VERSION" != "24.11" ] ;
-then
-
-    lmod_dir="/opt/cray/pe/lmod/lmod" ;
-
-    function clear-lmod() { [ -d $HOME/.cache/lmod ] && /bin/rm -rf $HOME/.cache/lmod ; } ;
-
-    source /etc/cray-pe.d/cray-pe-configuration.sh ;
-
-    source $lmod_dir/init/profile ;
-
-    mod_paths="/opt/cray/pe/lmod/modulefiles/core /opt/cray/pe/lmod/modulefiles/craype-targets/default $mpaths /opt/cray/modulefiles /opt/modulefiles" ;
-    MODULEPATH="" ;
-    for p in $(echo $mod_paths) ;
-    do
-        if [ -d $p ] ;
-        then
-            MODULEPATH=$MODULEPATH:$p ;
-        fi ;
-    done ;
-    export MODULEPATH=${MODULEPATH/:/} ;
-
-    LMOD_SYSTEM_DEFAULT_MODULES=$(echo ${init_module_list:-PrgEnv-$default_prgenv} | sed -E "s_[[:space:]]+_:_g") ;
-    export LMOD_SYSTEM_DEFAULT_MODULES ;
-    eval "source $BASH_ENV && module --initial_load --no_redirect restore" ;
-    unset lmod_dir ;
-
-    export CCPE_VERSION="24.11" ;
-
-fi ;
+eval $SWITCHTOCCPE
 
 
-
-echo -e "\nAfter cleanup:\n  - SIF: $SIF\n  - SIFCCPE: $SIFCCPE\n  - SINGULARITY_BIND: $SINGULARITY_BIND\n  - EXPORTCCPE: $EXPORTCCPE\n  - INTICCPE: $INITCCPE\n"
+echo -e "\nAfter cleanup:\n  - SIF: $SIF\n  - SIFCCPE: $SIFCCPE\n  - SINGULARITY_BIND: $SINGULARITY_BIND\n  - EXPORTCCPE: $EXPORTCCPE\n"
 echo -e "Checking if INITCCPE did its job:\n  - BASH_ENV: $BASH_ENV\n  - MODULEPATH: $MODULEPATH\n  - LMOD_SYSTEM_DEFAULT_MODULES: $LMOD_SYSTEM_DEFAULT_MODULES\n  - mod_paths: $mod_paths\n"
 
 echo -e "\n\n# Body of the job script - Building and investigating the environment in the container\n"
