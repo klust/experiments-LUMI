@@ -5,11 +5,11 @@
 # those in `module list` and also fails to change variables that should be changed.
 #
 # Suggestion for running:
-# sbatch example7.slurm ; sbatch --export=$EXPORTCCPE example7.slurm ; sbatch --export=NONE example7.slurm
+# sbatch example8.slurm ; sbatch --export=$EXPORTCCPE example8.slurm ; sbatch --export=NONE example8.slurm
 # both inside and outside the container, and load PrgEnv-gnu inside the container first
-# to see if the environment is preserved when using `sbatch example7.slurm`.
+# to see if the environment is preserved when using `sbatch example8.slurm`.
 #
-#SBATCH -J example7
+#SBATCH -J example8
 #SBATCH -p small
 #SBATCH -n 2
 #SBATCH -c 1
@@ -22,8 +22,11 @@
 # And add line for account
 
 if [ ! -d "/.singularity.d" ]
-then echo -e "# Entering the script to enter the container from the system\n" 
-else echo -e "\n# Entering the script to enter the container from the container\n" 
+then 
+    echo -e "# Entering the script to enter the container from the system\n" 
+    echo -e "Environment when entering (if module works):\n\n\`\`\`\n$(module list 2>&1)\n\`\`\`\n"
+else 
+    echo -e "\n# Entering the script to enter the container from the container\n" 
 fi
 
 #
@@ -50,16 +53,18 @@ echo -e "\n\n# Body of the job script - Building and investigating the environme
 echo -e "Detected version of the module tool (should be the container one, 8.3.37 for 24.11): \n\`\`\`\n$(module --version 2>&1)\n\`\`\`\n"
 echo -e "List of modules currently loaded (should be the default container ones):\n\n\`\`\`\n$(module list 2>&1)\n\`\`\`\n"
 
+echo -e 'Now loading PrgEnv-gnu to see if it is preserved when calling `srun`:\n```\n'
+module load PrgEnv-gnu
+echo -e '\n```'
+echo -e "List of modules currently loaded (should be with PrgEnv-gnu):\n\n\`\`\`\n$(module list 2>&1)\n\`\`\`\n"
+
+
+
 echo -e "\n\n# Trying an srun...\n\n"
 
-# Note the unexpected name of the next environment variable!
-# We want to export the whole environment that we just built via srun
-echo -e "Before calling \`srun\`, we need to unset \`SLURM_EXPORT_ENV\` to avoid propagation of the \`--export\` option that we used for the batch script.\n"
-
-unset SLURM_EXPORT_ENV
 
 echo -e "Now calling srun, excuting a \`module list\`, then print the value of \`CRAY_CC_VERSION\`, then \`module load cce\` and finally print the value of \`CRAY_CC_VERSION\` again."
-echo -e "We would like to to see the small list of modules from above again, then an empty variable and then the CCE version from the container.\n"
+echo -e "We would like to to see the list of modules from above again, then an empty variable and then the CCE version from the container.\n"
 
 # Note that we want srun to take over the environment we just built.
 echo -e "\n\`\`\`"
