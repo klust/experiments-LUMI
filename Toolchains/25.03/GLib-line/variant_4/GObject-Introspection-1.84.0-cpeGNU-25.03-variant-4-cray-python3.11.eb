@@ -9,9 +9,9 @@ local_craypython_version =   '3.11.7'
 local_craypython_maj_min = '.'.join( local_craypython_version.split('.')[:2] )
 
 local_suffix =               'variant-4'
-local_GLib_version =         '2.81.2'        # https://ftp.gnome.org/pub/GNOME/sources/glib/
+local_GLib_version =         '2.85.1'        # https://ftp.gnome.org/pub/GNOME/sources/glib/
 local_cairo_version =        '1.18.4'        # https://www.cairographics.org/
-local_GObject_version =      '1.80.1'        # https://github.com/GNOME/gobject-introspection/releases
+local_GObject_version =      '1.84.0'        # https://github.com/GNOME/gobject-introspection/releases
 
 name =          'GObject-Introspection'
 version =       local_GObject_version
@@ -48,10 +48,10 @@ toolchain = {'name': 'cpeGNU', 'version': '25.03'}
 
 source_urls = [FTPGNOME_SOURCE]
 sources =     [SOURCELOWER_TAR_XZ]
-patches = ['GObject-Introspection-1.80.1_install-GLib-GIR-files.patch']
+patches = ['GObject-Introspection-%(version)s_install-GLib-GIR-files.patch']
 checksums = [
-    {'gobject-introspection-1.80.1.tar.xz':                       'a1df7c424e15bda1ab639c00e9051b9adf5cea1a9e512f8a603b53cd199bc6d8'},
-    {'GObject-Introspection-1.80.1_install-GLib-GIR-files.patch': 'c1909f1b7fd30784ae789ac0b5e45e0ca3dd2456890b864efa86a2f8c2e563aa'},
+    {'gobject-introspection-1.84.0.tar.xz':                       '945b57da7ec262e5c266b89e091d14be800cc424277d82a02872b7d794a84779'},
+    {'GObject-Introspection-1.84.0_install-GLib-GIR-files.patch': 'c1909f1b7fd30784ae789ac0b5e45e0ca3dd2456890b864efa86a2f8c2e563aa'},
 ]
 
 builddependencies = [

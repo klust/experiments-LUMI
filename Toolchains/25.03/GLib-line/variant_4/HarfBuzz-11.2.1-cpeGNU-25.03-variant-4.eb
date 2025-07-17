@@ -9,9 +9,9 @@ local_craypython_version =   '3.11.7'
 local_craypython_maj_min = '.'.join( local_craypython_version.split('.')[:2] )
 
 local_suffix =               'variant-4'
-local_GLib_version =         '2.81.2'        # https://ftp.gnome.org/pub/GNOME/sources/glib/
+local_GLib_version =         '2.85.1'        # https://ftp.gnome.org/pub/GNOME/sources/glib/
 local_cairo_version =        '1.18.4'        # https://www.cairographics.org/
-local_GObject_version =      '1.80.1'        # https://github.com/GNOME/gobject-introspection/releases
+local_GObject_version =      '1.84.0'        # https://github.com/GNOME/gobject-introspection/releases
 local_HarfBuzz_version =     '11.2.1'        # https://www.freedesktop.org/software/harfbuzz/release/
 
 name =    'HarfBuzz'
