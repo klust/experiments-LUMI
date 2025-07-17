@@ -1,0 +1,108 @@
+# Note that GLib is really made to be compiled with GCC and nothing else
+# due to the use of compiler-specific pragma, so you may get warnings
+# about unrecognizded pragmas when compiling with another compiler.
+easyblock = 'MesonNinja'
+
+local_gettext_version =      '0.24'          # https://ftp.gnu.org/pub/gnu/gettext/
+local_libffi_version =       '3.4.5'         # https://sourceware.org/libffi/
+local_libxml2_version =      '2.13.4'        # http://xmlsoft.org/sources/
+local_PCRE2_version =        '10.45'         # https://github.com/PCRE2Project/pcre2/releases  # Not yet in EB 2025a when checked for installation
+local_util_version =         '2.40.4'        # https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/ (Not yet in EB 2025a when checking)
+
+local_suffix =               'variant-4'
+local_GLib_version =         '2.81.2'        # https://ftp.gnome.org/pub/GNOME/sources/glib/
+
+local_craypython_version =   '3.11.7'
+local_craypython_maj_min = '.'.join( local_craypython_version.split('.')[:2] )
+
+name =    'GLib'
+version = local_GLib_version
+versionsuffix = f'-{local_suffix}'
+
+homepage = 'http://www.gtk.org/'
+
+whatis = [
+    'Description: One of the GTK+ base libraries',
+    'The module provides a number of command line utilities and static and shared libraries',
+]
+
+description = """
+GLib provides the core application building blocks for libraries and
+applications written in C. It provides the core object system used in GNOME,
+the main loop implementation, and a large set of utility functions for strings
+and common data structures.
+
+The module provides a number of command line utilities and staqtic and shared
+libraries.
+"""
+
+docurls= [
+    'Web-based documentation: https://developer.gnome.org/glib/',
+]
+
+docpaths = [
+    'share/gtk-doc/html/glib',
+    'share/gtk-doc/html/gobject',
+    'share/gtk-doc/html/gio'
+]
+
+software_license_urls = [
+    'https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html',
+]
+
+toolchain = {'name': 'cpeGNU', 'version': '25.03'}
+toolchainopts = {'pic': True, 'extra_cflags': '-Wno-unsupported-target-opt'}
+
+# Check on https://ftp.gnome.org/pub/GNOME/sources/glib/
+source_urls = [FTPGNOME_SOURCE]
+sources =     [SOURCELOWER_TAR_XZ]
+checksums =   ['ce84b241b84750a3d42c78c456976fac57f2d2726a110f2ba059c052a4349d1c']
+
+builddependencies = [
+    # Python is required for building against GLib, at least when
+    # gdbus-codegen or one of the other python scripts are used.
+    # The paths to Python are currently hard-coded in the GLib scripts though,
+    # but it may still be better to ensure the proper cray-python is loaded
+    # which we do not do here with the module.
+    ('buildtools' ,       '%(toolchain_version)s', '',                                        SYSTEM),
+    ('buildtools-python', '%(toolchain_version)s', f'-cray-python{local_craypython_maj_min}', SYSTEM),
+]
+
+dependencies = [
+    ('libffi',     local_libffi_version),
+    ('gettext',    local_gettext_version),
+    ('libxml2',    local_libxml2_version),
+    ('PCRE2',      local_PCRE2_version),
+    ('util-linux', local_util_version),
+]
+
+# Doesn't need MPI, ROCm or BLAS, and module unload never fails so this is safe.
+preconfigopts = ' && '.join([
+    'module unload cray-libsci cray-mpich rocm xpmem',
+    f'export PYTHON=python{local_craypython_maj_min}',
+]) + ' && '
+preinstallopts = pretestopts = prebuildopts = preconfigopts
+
+configopts  = "--buildtype=release --default-library=both "
+
+#parallel = 1 # For debugging
+
+#postinstallcmds = ["sed -i -e 's|#!.*python[0-9.]*$|#!/usr/bin/env python|' %(installdir)s/bin/*"]
+#fix_python_shebang_for = ['bin/*']
+
+postinstallcmds = [
+    # Fix shebangs and make very sure it uses cray-python.
+    f'module load cray-python/{local_craypython_version} && ' +
+    f'sed -i -e "s|#!.*python[0-9.]*$|#!$(which python{local_craypython_maj_min})|" %(installdir)s/bin/*',
+    # Copy license information etc.
+    'mkdir -p %(installdir)s/share/licenses/%(name)s',
+    'cd %(start_dir)s && cp LICENSES/LGPL-2.1-or-later.txt NEWS README.md SECURITY.md %(installdir)s/share/licenses/%(name)s',   
+]
+
+sanity_check_paths = {
+    'files': ['lib/libglib-%(version_major)s.0.a', 'lib/libglib-%%(version_major)s.0.%s' % SHLIB_EXT,
+              f'share/licenses/{name}/LGPL-2.1-or-later.txt'],
+    'dirs':  ['bin', 'include'],
+}
+
+moduleclass = 'vis'
