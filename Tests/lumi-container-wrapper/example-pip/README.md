@@ -25,6 +25,8 @@
         PATH=$PWD/bin:$PATH
         which mkdocs
         mkdocs --version
+        _debug_exec cat /.singularity.d/labels.json
+        _debug_exec cat /etc/os-release
         exit
         ```
 

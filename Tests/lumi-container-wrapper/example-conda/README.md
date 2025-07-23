@@ -26,6 +26,8 @@
         which python
         python --version
         python -c 'import scipy; print( scipy.__version__ )'
+        _debug_exec cat /.singularity.d/labels.json
+        _debug_exec cat /etc/os-release
         exit
         ```
 

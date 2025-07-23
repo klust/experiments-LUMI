@@ -27,6 +27,8 @@ Example from [hpc-container-wrapper github](https://github.com/CSCfi/hpc-contain
         PATH=$PWD/bin:$PATH
         which fftw_prog
         fftw_prog
+        _debug_exec cat /.singularity.d/labels.json
+        _debug_exec cat /etc/os-release
         exit
         ```
 
