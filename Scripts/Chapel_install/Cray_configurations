@@ -1,0 +1,13 @@
+/opt/cray/chapel/2.5.0/hpe-cray-ex/lib/hpe-cray-ex/cray-prgenv-cray/x86_64/cpu-x86-rome/loc-flat/comm-none/tasks-qthreads/tmr-generic/unwind-none/mem-jemalloc/atomics-cstdlib/hwloc-bundled/pci-disable/re2-bundled/fs-none/lib_pic-none/san-none/chplconfig
+/opt/cray/chapel/2.5.0/hpe-cray-ex/lib/hpe-cray-ex/cray-prgenv-cray/x86_64/cpu-x86-rome/loc-flat/comm-none/tasks-qthreads/tmr-generic/unwind-none/mem-jemalloc/atomics-cstdlib/hwloc-bundled/pci-disable/re2-bundled/fs-none/lib_pic-pic/san-none/chplconfig
+/opt/cray/chapel/2.5.0/hpe-cray-ex/lib/hpe-cray-ex/cray-prgenv-cray/x86_64/cpu-x86-rome/loc-flat/comm-ofi/system/pmi2/tasks-qthreads/tmr-generic/unwind-none/mem-jemalloc/atomics-cstdlib/hwloc-bundled/pci-enable/re2-bundled/fs-none/lib_pic-none/san-none/chplconfig
+/opt/cray/chapel/2.5.0/hpe-cray-ex/lib/hpe-cray-ex/cray-prgenv-gnu/x86_64/cpu-x86-rome/loc-flat/comm-none/tasks-qthreads/tmr-generic/unwind-none/mem-jemalloc/atomics-cstdlib/hwloc-bundled/pci-disable/re2-bundled/fs-none/lib_pic-none/san-none/chplconfig
+/opt/cray/chapel/2.5.0/hpe-cray-ex/lib/hpe-cray-ex/cray-prgenv-gnu/x86_64/cpu-x86-rome/loc-flat/comm-none/tasks-qthreads/tmr-generic/unwind-none/mem-jemalloc/atomics-cstdlib/hwloc-bundled/pci-disable/re2-bundled/fs-none/lib_pic-pic/san-none/chplconfig
+/opt/cray/chapel/2.5.0/hpe-cray-ex/lib/hpe-cray-ex/cray-prgenv-gnu/x86_64/cpu-x86-rome/loc-flat/comm-ofi/system/pmi2/tasks-qthreads/tmr-generic/unwind-none/mem-jemalloc/atomics-cstdlib/hwloc-bundled/pci-enable/re2-bundled/fs-none/lib_pic-none/san-none/chplconfig
+/opt/cray/chapel/2.5.0/hpe-cray-ex/lib/hpe-cray-ex/llvm/x86_64/cpu-x86-rome/loc-flat/comm-none/tasks-qthreads/tmr-generic/unwind-none/mem-jemalloc/atomics-cstdlib/hwloc-bundled/pci-disable/re2-bundled/fs-none/lib_pic-none/san-none/chplconfig
+/opt/cray/chapel/2.5.0/hpe-cray-ex/lib/hpe-cray-ex/llvm/x86_64/cpu-x86-rome/loc-flat/comm-none/tasks-qthreads/tmr-generic/unwind-none/mem-jemalloc/atomics-cstdlib/hwloc-bundled/pci-disable/re2-bundled/fs-none/lib_pic-pic/san-none/chplconfig
+/opt/cray/chapel/2.5.0/hpe-cray-ex/lib/hpe-cray-ex/llvm/x86_64/cpu-x86-rome/loc-flat/comm-ofi/system/pmi2/tasks-qthreads/tmr-generic/unwind-none/mem-jemalloc/atomics-cstdlib/hwloc-bundled/pci-enable/re2-bundled/fs-none/lib_pic-none/san-none/chplconfig
+
+My config:
+./llvm/x86_64/cpu-x86-trento/loc-gpu/gpu-amd/gpu_vers-6.0.3/gpu_mem-array_on_device/comm-none/tasks-qthreads/tmr-generic/unwind-none/mem-jemalloc/atomics-cstdlib/hwloc-bundled/pci-enable/re2-bundled/fs-none/lib_pic-none/san-none/chplconfig
+
