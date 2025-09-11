@@ -6,7 +6,8 @@
     
     -   That script also tries to copy a directory that does not exist
     
-    -   Afterwards, chapel cannot report the configuration for which it was built.
+    -   Afterwards, chapel cannot report the configuration for which it was built if 
+        it was build with --chpl-home.
     
 -   Needed a fix also for hwloc to find ncurses.
     

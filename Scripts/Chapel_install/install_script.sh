@@ -53,6 +53,7 @@ export CHPL_ROCM_PATH=$EBROOTROCM
 # Communication
 # Only single-locale execution required
 export CHPL_COMM="none"
+export CHPL_ATOMICS='cstdlib'        # cstdlib, intrinsics, locks. Default is cstdlib.
 export CHPL_LAUNCHER="none"
 export CHPL_TASKS=qthreads           # qthreads or fifo (POSIX threads)
 # Memory management
