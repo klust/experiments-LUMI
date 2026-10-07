@@ -5,12 +5,13 @@
 Source: [GitHub marblestation/benchmark-leapfrog](https://github.com/marblestation/benchmark-leapfrog)
 
 ```bash
-amdclang -O2 leapfrog.f90 -o leapfrog.x
+amdflang -O3 -march=znver3 -fdefault-real-8 leapfrog.f90 -o leapfrog.x
 ```
 
-Does not yet work:
+Note that `-mcpu` does not work on x86!
+
+Suggested compile with gfortran and 8-byte real:
 
 ```bash
-amdclang -O2 -mcpu=znver3 leapfrog.f90 -o leapfrog.x
+gfortran -O3 -march=native -finit-real=nan -fdefault-real-8 leapfrog.f90 -o leapfrog.x
 ```
-

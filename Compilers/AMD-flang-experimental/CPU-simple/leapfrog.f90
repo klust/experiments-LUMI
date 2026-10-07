@@ -12,7 +12,7 @@ program leapfrog
 
     time = 0
     time_step = 0.08 ! time step, days
-    time_limit = 365.25e6 ! days
+    time_limit = 365.25e4 ! days
     ! Set initial conditions
     m(:) = (/0.08,3.0e-6/) ! M_SUN
     x(:,1) = 0.0
