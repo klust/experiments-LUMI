@@ -83,3 +83,16 @@ g++-14 -O3 -march=znver3 tsp_approach.cpp -o tsp_approach.x
 ## bisection.f90
 
 Program 2.6 from [An Introduction to Computational Physics by Tao Pang](https://www.physics.unlv.edu/~pang/cp_f90.html)
+
+This program uses some nonlinear functions and hence needs to link with the math library to work.
+
+```bash
+amdflang -O3 -march=znver3 bisection.f90 -o bisection.x
+```
+
+or
+
+```bash
+gfortran-14 -O3 -march=znver3 bisection.f90 -o bisection.x
+```
+
