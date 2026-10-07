@@ -78,3 +78,8 @@ Suggested compile with gfortran:
 ```bash
 g++-14 -O3 -march=znver3 tsp_approach.cpp -o tsp_approach.x
 ```
+
+
+## bisection.f90
+
+Program 2.6 from [An Introduction to Computational Physics by Tao Pang](https://www.physics.unlv.edu/~pang/cp_f90.html)
