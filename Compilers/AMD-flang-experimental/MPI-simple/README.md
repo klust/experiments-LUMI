@@ -23,6 +23,15 @@
     srun -psmall-g -n2 -c7 -G2 -t2:00 ./hello-world-c.x
     ```
 
+    The output should be
+
+    ```bash
+    Hello, World, from task 0 of 2
+    Hello, World, from task 1 of 2
+    ```
+
+    though the order of the lines may be different.
+
 
 ## hello-world.f90
 
@@ -46,3 +55,12 @@
     ```bash
     srun -psmall-g -n2 -c7 -G2 -t2:00 ./hello-world-f.x
     ```
+
+    The output should be
+
+    ```bash
+     Hello World, from task  0 of 2
+     Hello World, from task  1 of 2
+   ```
+
+    though the order of the lines may be different.
