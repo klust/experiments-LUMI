@@ -8,6 +8,13 @@ Taken from this [AMD HPC Training example](https://github.com/amd/HPCTrainingExa
 amdflang -g -O3  -ffree-form -fopenmp --offload-arch=gfx90a saxpy_openmp.F90 -o saxpy
 ```
 
+Run with:
+
+```bash
+srun -n1 -c1 -G1 -psmall-g -t5:00 ./saxpy
+```
+
+(assuming you have the account to use set through the environment variable `SLURM_ACCOUNT`).
 The correct result is all elements should be 4.
 
 
@@ -15,7 +22,15 @@ The correct result is all elements should be 4.
 
 Example taken from this [AMD HPC Training example](https://github.com/amd/HPCTrainingExamples/tree/main/Pragma_Examples/OpenMP/Fortran/8_jacobi/2_jacobi_targetdata).
 
-Compile with the Makefile and then run with the `./jacobi` command and check if 
+Compile with the Makefile and then run with the 
+```
+./jacobi
+``` command 
+or from a login node with
+```bash
+srun -n1 -c1 -G1 -psmall-g -t5:00 ./jacobi
+```
+and check if 
 the iterations converge. Initial convergence should be very fast, but the convergence
 will slow down quickly which is natural for a Jacobi scheme.
 
@@ -44,5 +59,6 @@ Compiling this with the Makefile and then run `./jacobi` with
 export HSA_XNACK=1
 ```
 
-doesn't show convergence so something seems wrong in that example.
+doesn't show convergence so something seems wrong in that example. It looks though like we have had
+this issue on LUMI since the January 2026 update when experimenting with ROCm 7+.
 
