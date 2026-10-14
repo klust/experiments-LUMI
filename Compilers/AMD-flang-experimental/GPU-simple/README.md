@@ -25,8 +25,8 @@ Example taken from this [AMD HPC Training example](https://github.com/amd/HPCTra
 Compile with the Makefile and then run with the 
 ```
 ./jacobi
-``` command 
-or from a login node with
+```
+command or from a login node with
 ```bash
 srun -n1 -c1 -G1 -psmall-g -t5:00 ./jacobi
 ```
