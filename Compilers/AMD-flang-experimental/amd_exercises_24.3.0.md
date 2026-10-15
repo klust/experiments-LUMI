@@ -57,11 +57,11 @@ make
 OK when running the solution
 
 
-### HIP-OpenMP
+## HIP-OpenMP
 
 Not all examples make sense on LUMI.
 
-#### CXX/saxpy_openmp_offload
+### CXX/saxpy_openmp_offload
 
 OK after setting
 
@@ -69,12 +69,12 @@ OK after setting
 export CXX=amdclang++
 ```
 
-#### CXX/saxpy_openmp_hip
+### CXX/saxpy_openmp_hip
 
 This example DOES NOT WORK.
 
 
-#### CXX/saxpy_hip_openmp
+### CXX/saxpy_hip_openmp
 
 Works correctly after setting 
 
@@ -83,7 +83,7 @@ export CXX=amdclang++
 ```
 
 
-#### CXX/daxpy
+### CXX/daxpy
 
 FAIL: Case runs but produces the wrong result.
 The code does run correctly with the system ROCm 6.3.4,
@@ -94,10 +94,7 @@ With the rocm/10.0.0 module the code also fails.
 This could of course be a driver issue.
 
 
-TO FX examples.
-
-
-#### F/daxpy
+### F/daxpy
 
 ``` bash
 export FC=amdflang
@@ -110,7 +107,7 @@ make
 -   Sam 7.0.3 module: Also core-dumps.
 
 
-#### F/Calling_DGEMM/explicit
+### F/Calling_DGEMM/explicit
 
 ``` bash
 export FC=amdflang
@@ -126,3 +123,57 @@ make
     module to be loaded.
 
 -   Ran correctly with PrgEnv-amd and using rocm/6.3.4.
+
+
+## atomics_openmp folder
+
+-   Testing with 24.3.0.
+
+    -   arraysum1: OK
+    
+    -   arraysum2 till arraysum4 also OK with HSA_XNACK=1
+
+    -   arraysum5 till arraysum7: wrong result (with HSA_XNACK=1)
+
+    -   arraysum8 OK
+
+    -   arraysum9 fails with wrong result
+
+    -   arraysum10 OK
+
+-   With ROCm 7.0.3:
+
+    -   arraysum1 OK
+
+    -   arraysum2 till arraysum4 also OK with HSA_XNACK=1
+
+    -   arraysum5 and arraysum6: wrong result (with HSA_XNACK=1)
+
+    -   arraysum7 OK
+
+    -   arraysum8 and arraysum9 fail with wrong result
+
+    -   arraysum10 OK
+
+-   With the system ROCm/6.3.4 all tests are OK.
+
+-   With Sam rocm/6.4.4 module, tests 5 and 6 fail while all other tests work.
+    With our own rocm/6.4.4 module compiling fails. For some reason, the module 
+    fails to find the `.bc` files even though they are installed.
+
+
+## HIP-Optimizations folder
+
+### daxpy
+
+-   System rocm/6.3.4: OK. All tests print PASSED.
+
+-   24.3.0: All tests print PASSED.
+
+
+## rocm-blogs-codes
+
+### matrix-cores
+
+Same results with 24.3.0 and system 6.3.4.
+
