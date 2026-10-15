@@ -5,9 +5,24 @@ Exercises from [github.com/amd/HPCTrainingExamples](https://github.com/amd/HPCTr
 
 ## HIP folder
 
+Unless otherwise specified, the environment is initialised with
+
+``` bash
+module purge
+module load CrayEnv AMD-flang-experimenta/24.3.0-MPI therock
+```
+
+
 ### allocators
 
-Unified memory example; does not work.
+Build and run with
+
+``` bash
+HSA_XNACK=1 CXX=amdclang++ HIP_PLATFORM=amd make clean test
+```
+
+and it runs OK, but there are no results to check correctness.
+
 
 ### basic_examples
 
@@ -61,17 +76,33 @@ OK when running the solution
 
 Not all examples make sense on LUMI.
 
+Unless otherwise specified, the environment is initialised with
+
+``` bash
+module purge
+module load CrayEnv AMD-flang-experimenta/24.3.0-MPI therock
+```
+
+
 ### CXX/saxpy_openmp_offload
 
 OK after setting
 
 ```bash
 export CXX=amdclang++
+unset HSA_XNACK
+make clean test
 ```
 
 ### CXX/saxpy_openmp_hip
 
-This example DOES NOT WORK.
+Works correctly after setting 
+
+```bash
+export CXX=amdclang++
+unset HSA_XNACK
+make clean test
+```
 
 
 ### CXX/saxpy_hip_openmp
@@ -80,16 +111,47 @@ Works correctly after setting
 
 ```bash
 export CXX=amdclang++
+unset HSA_XNACK
+make clean test
 ```
+
+
+### CXX/saxpy_APU
+
+Works correctly when built with
+
+```bash
+CXX=amdclang++ HSA_XNACK=1 make clean test
+```
+
+
+### CXX/interop
+
+There is a problem with the Makefile as with 24.3.0, we need to manually link libm,
+so `LDFLAGS` needs to be changed in the Makefile.
+
+``` bash
+unset HSA_XNACK
+CXX=amdclang HIPCC=hipcc make clean interop
+./interop
+```
+
+Passes with 24.3.0.
 
 
 ### CXX/daxpy
 
-FAIL: Case runs but produces the wrong result.
+``` bash
+unset HSA_XNACK
+CXX=amdclang++ HIP_PLATFORM=amd make clean test
+```
+
+Works with 24.3.0 if the environment is clean before loading AMD-flang-experimental.
+
 The code does run correctly with the system ROCm 6.3.4,
 with the Sam rocm/7.0.3, rocm/7.1.1, rocm/7.2.4.
 
-With the rocm/10.0.0 module the code also fails.
+With the rocm/10.0.0 module the code fails though.
 
 This could of course be a driver issue.
 
@@ -97,21 +159,17 @@ This could of course be a driver issue.
 ### F/daxpy
 
 ``` bash
-export FC=amdflang
-make
+FC=amdflang make clean daxpy
 ./daxpy
 ```
 
--   24.3.0: Crashes with a memory fault.
-
--   Sam 7.0.3 module: Also core-dumps.
+-   24.3.0: works if the environment is clean when loading the AMD-flang-experimental module.
 
 
 ### F/Calling_DGEMM/explicit
 
 ``` bash
-export FC=amdflang
-make
+FC=amdflang make clean test
 ```
 
 -   24.3.0: Prints FAILED
@@ -125,7 +183,22 @@ make
 -   Ran correctly with PrgEnv-amd and using rocm/6.3.4.
 
 
+### F/Calling_DGEMM/explicit
+
+``` bash
+HSA_XNACK=1 FC=amdflang make clean test
+```
+
+-   24.3.0: Passes the test.
+
+
 ## atomics_openmp folder
+
+Build with:
+
+``` bash
+CC=amdclang make clean all
+```
 
 -   Testing with 24.3.0.
 
@@ -165,6 +238,11 @@ make
 ## HIP-Optimizations folder
 
 ### daxpy
+
+``` bash
+make
+for i in $(seq 1 5); do ./daxpy_$i 1000000 ; done
+```
 
 -   System rocm/6.3.4: OK. All tests print PASSED.
 
