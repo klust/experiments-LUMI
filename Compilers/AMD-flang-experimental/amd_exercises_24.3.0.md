@@ -72,6 +72,20 @@ make
 OK when running the solution
 
 
+### transpose
+
+``` bash
+make clean all
+./transpose_kernel_read_contiguous
+./transpose_kernel_write_contiguous
+./transpose_tiled
+./transpose_rocblas
+./transpose_timed
+```
+
+All tests pass in 24.3.0.
+
+
 ## HIP-OpenMP
 
 Not all examples make sense on LUMI.
