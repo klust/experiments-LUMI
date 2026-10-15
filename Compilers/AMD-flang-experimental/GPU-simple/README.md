@@ -22,18 +22,6 @@ The correct result is all elements should be 4.
 
 Example taken from this [AMD HPC Training example](https://github.com/amd/HPCTrainingExamples/tree/main/Pragma_Examples/OpenMP/Fortran/8_jacobi/2_jacobi_targetdata).
 
-Compile with the Makefile and then run with the 
-```
-./jacobi
-```
-command or from a login node with
-```bash
-srun -n1 -c1 -G1 -psmall-g -t5:00 ./jacobi
-```
-and check if 
-the iterations converge. Initial convergence should be very fast, but the convergence
-will slow down quickly which is natural for a Jacobi scheme.
-
 To compile with the Makefile, use
 
 ```bash
@@ -49,6 +37,18 @@ make FC=amdflang
 
 where in the latter two examples other compilers may also be used (though no guarantee that the other options
 set in the Makefile apply to that compiler also).
+
+Next run with the 
+```
+./jacobi
+```
+command or from a login node with
+```bash
+srun -n1 -c1 -G1 -psmall-g -t5:00 ./jacobi
+```
+and check if 
+the iterations converge. Initial convergence should be very fast, but the convergence
+will slow down quickly which is natural for a Jacobi scheme.
 
 Note: [jacobi_usm](https://github.com/amd/HPCTrainingExamples/tree/main/Pragma_Examples/OpenMP/Fortran/8_jacobi/1_jacobi_usm) 
 is a slight variant for unified memory. When testing in October 2026, there seemed to be an issue:

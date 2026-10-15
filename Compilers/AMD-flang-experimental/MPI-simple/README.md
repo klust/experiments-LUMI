@@ -7,7 +7,7 @@
     ```bash
     module load CrayEnv
     module purge
-    module load AMD-flang-experimental/24.3.0-cray-mpich-9.1.0
+    module load AMD-flang-experimental/24.3.0-MPI
     module load therock/24.3.0 mpich/4.3.1
     ```
 
@@ -40,7 +40,7 @@
     ```bash
     module load CrayEnv
     module purge
-    module load AMD-flang-experimental/24.3.0-cray-mpich-9.1.0
+    module load AMD-flang-experimental/24.3.0-MPI
     module load therock/24.3.0 mpich/4.3.1
     ```
 
